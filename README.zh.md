@@ -11,7 +11,7 @@ dsh-unified-context — 以 MIT License 发布。
 [![Node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](https://nodejs.org/)
 [![DeepSeek Honeys](https://dshoneys.github.io/awesome-dshoneys/assets/badges/listed.svg)](https://dshoneys.github.io/awesome-dshoneys/)
 
-**DSH Unified Context**（`dsh-unified-context`，统一上下文）把 **pi**、**opencode**、**codex**、**claude-code** 与 **WorkBuddy（腾讯）** 迁移进 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）：会话与聊天记录、模型真正看到的上下文（`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`、skills、项目配置），以及定时自动化任务。上下文用**符号链接共享同一份真文件**——不是每个 Harness 各复制一份。导入的会话出现在会话列表、可携带完整历史继续对话；自定义 agent 与模式提示词变成可发现的 dsh skills；composer 里的一键 **同步** 按钮即可完成全部迁移。
+**DSH Unified Context**（`dsh-unified-context`，统一上下文）把 **pi**、**opencode**、**codex**、**claude-code** 与 **WorkBuddy（腾讯）** 迁移进 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）：会话与聊天记录、模型真正看到的完整上下文（`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`、skills、项目与 Agent 长期记忆、项目配置），以及定时自动化任务。上下文用**符号链接共享同一份真文件**——不是每个 Harness 各复制一份。导入的会话出现在会话列表、可携带完整历史继续对话；自定义 agent 与模式提示词变成可发现的 dsh skills；composer 里的一键 **同步** 按钮即可完成全部迁移。
 
 | 资源 | 链接 |
 | --- | --- |
@@ -22,6 +22,7 @@ dsh-unified-context — 以 MIT License 发布。
 ## 目录
 
 - [特性](#特性)
+- [为什么需要统一上下文](#为什么需要统一上下文)
 - [截图](#截图)
 - [安装](#安装)
 - [使用](#使用)
@@ -47,6 +48,22 @@ dsh-unified-context — 以 MIT License 发布。
 - **按工作区分组。** 导入的会话自动挂到与原始 `cwd` 匹配的工作区（没有则创建）；`/attach-workspaces` 可补挂旧导入。
 - **幂等。** 会话 id 稳定（`pi-<uuid>` / `oc-<id>` / `codex-<id>` / `claude-<id>`），重复导入自动跳过。
 - **零运行时依赖。** 只用 Node 内置模块（`node:zlib` 的 zstd、`node:sqlite`）加 dsh 平台模块。
+
+## 为什么需要统一上下文
+
+每个 Harness 对「模型的上下文存在哪」都有自己的答案：聊天记录在一个地方，指令文件在另一个地方，skills 在第三个目录，长期记忆又换了格式，自动化任务干脆是另一套。于是换 Harness 时，模型不是变笨了，而是**失忆了**——它知道的东西有一半没跟过来。只导入聊天记录，大概只能补上一半的缺口。
+
+DSH Unified Context 把剩下的补完：
+
+- **一份会话。** 五种 Harness 的会话变成真正可继续的 dsh 会话——文本、推理、工具调用，以及源格式记录了真实结果时的工具结果。
+- **一份指令。** `AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md` 收敛到一份规范文件，每个 Harness 通过符号链接读同样的字节。
+- **一个技能架。** 一个共享 skill hub；只存在于某个 Harness 的技能原地收编，内容相同的副本折叠成链接。
+- **一份记忆。** 项目记忆（Claude Code、WorkBuddy）与按 Agent 的记忆（Codex、Claude）按范围收敛到一份目录；在 `AGENTS.md` 里生成小索引，dsh 按需读取，不把笔记本塞满每次 prompt。
+- **一套自动化。** Codex 与 WorkBuddy 的自动化变成 dsh 定时任务，默认暂停导入，方便先关掉源任务再启用。
+
+真正让它可信的设计是：**链接，不是复制。** 每块共享内容只有一份真副本，其余全部指向它。在任何 Harness 里改一处，所有 Harness 立刻看到；不用手动重同步，也不会悄悄分叉。重跑是空操作；有差异的副本只报告、不覆盖；删掉软链接就能恢复原来的布局。
+
+迁移应该像住进一间配好家具的房子，而不是重新买一遍家具。
 
 ## 截图
 

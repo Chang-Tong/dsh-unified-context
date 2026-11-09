@@ -11,7 +11,7 @@ dsh-unified-context — released under the MIT License.
 [![Node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](https://nodejs.org/)
 [![DeepSeek Honeys](https://dshoneys.github.io/awesome-dshoneys/assets/badges/listed.svg)](https://dshoneys.github.io/awesome-dshoneys/)
 
-**DSH Unified Context** (`dsh-unified-context`, 统一上下文) migrates **pi**, **opencode**, **codex**, **claude-code**, and **WorkBuddy (Tencent)** into [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh): sessions and chat history, the context the model actually saw (`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`, skills, project files), and scheduled automations. Context is **shared through symlinks — one real copy, every harness reading it — never copied per harness.** Sessions appear in the session list and resume with the full history; custom agents and mode prompts become discoverable dsh skills; a one-click **Sync** button in the composer runs the whole migration.
+**DSH Unified Context** (`dsh-unified-context`, 统一上下文) migrates **pi**, **opencode**, **codex**, **claude-code**, and **WorkBuddy (Tencent)** into [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh): sessions and chat history, the full context the model actually saw (`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`, skills, project and per-agent memory, project files), and scheduled automations. Context is **shared through symlinks — one real copy, every harness reading it — never copied per harness.** Sessions appear in the session list and resume with the full history; custom agents and mode prompts become discoverable dsh skills; a one-click **Sync** button in the composer runs the whole migration.
 
 | Resource | Link |
 | --- | --- |
@@ -22,6 +22,7 @@ dsh-unified-context — released under the MIT License.
 ## Table of Contents
 
 - [Features](#features)
+- [Why unified context](#why-unified-context)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -47,6 +48,22 @@ dsh-unified-context — released under the MIT License.
 - **Workspace placement.** Imported sessions attach to a workspace matching their original `cwd` (created on demand); `/attach-workspaces` retro-fits existing imports.
 - **Idempotent.** Stable ids (`pi-<uuid>` / `oc-<id>` / `codex-<id>` / `claude-<id>`); re-imports skip what already exists.
 - **Zero runtime dependencies.** Node built-ins (`node:zlib` zstd, `node:sqlite`) plus dsh platform modules.
+
+## Why unified context
+
+Every harness answers "where does the model's context live?" differently: the transcript here, the instructions file there, skills in another directory, long-term memory somewhere else, automations in a third format. Switch harnesses and the model does not get worse — it gets **amnesia**, because half of what it knew never came along. Importing the chat transcript alone closes maybe half of that gap.
+
+DSH Unified Context closes the rest:
+
+- **One conversation.** Sessions from five harnesses become real, resumable dsh sessions — text, reasoning, tool calls, and the real tool results when the source recorded them.
+- **One instruction set.** `AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md` converge on one canonical file; every harness reads the same bytes through a symlink.
+- **One skill shelf.** One shared skill hub, with harness-only skills adopted in place and identical copies collapsed into links.
+- **One memory.** Project memory (Claude Code, WorkBuddy) and per-agent memory (Codex, Claude) converge on one directory per scope, with a generated index in `AGENTS.md` so dsh reads notes on demand instead of bloating every prompt.
+- **One schedule.** Codex and WorkBuddy automations become dsh scheduled tasks, imported paused so you can switch the source off before arming them.
+
+The design choice that makes it trustworthy: **links, not copies.** Every shared piece has exactly one real copy; everything else points at it. Fix a note in any harness and every harness sees the fix; there is nothing to re-sync by hand and nothing that silently forks. A re-run is a no-op; divergent copies are reported, never overwritten; delete a symlink and the old layout comes back.
+
+Migration should feel like moving into a furnished apartment, not buying the furniture again.
 
 ## Screenshots
 

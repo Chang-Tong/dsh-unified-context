@@ -2,7 +2,7 @@
   "name": "dsh-unified-context",
   "version": "0.5.0",
   "packageManager": "pnpm@11.7.0",
-  "description": "DSH Unified Context (统一上下文): migrate pi/opencode/codex/claude-code/WorkBuddy sessions into DeepSeek Harness, share one AGENTS.md/skill context through symlinks, and migrate automations.",
+  "description": "DSH Unified Context (统一上下文): migrate pi/opencode/codex/claude-code/WorkBuddy sessions into DeepSeek Harness, share AGENTS.md/skills/project & agent memory through symlinks, and migrate automations. One context, every harness.",
   "type": "module",
   "main": "plugin/index.mjs",
   "exports": {
