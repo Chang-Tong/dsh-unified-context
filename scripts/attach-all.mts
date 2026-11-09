@@ -20,7 +20,7 @@ import {
   attachSessionsToWorkspaces,
   listImportedSessions,
   unifyWorkspaceTitles,
-} from '../../dsh-import-agents/plugin/attach-workspaces.mjs'
+} from '../../dsh-unified-context/plugin/attach-workspaces.mjs'
 
 const home = process.env.HOME ?? ''
 const ctx = new Context()

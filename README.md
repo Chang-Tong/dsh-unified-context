@@ -1,23 +1,22 @@
 <!--
-dsh-import-agents — released under the MIT License.
+dsh-unified-context — released under the MIT License.
 -->
-# dsh-import-agents
+# DSH Unified Context
 
 **English** · [简体中文](README.zh.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/dsh-import-agents)](https://www.npmjs.com/package/dsh-import-agents)
-[![CI](https://github.com/Chang-Tong/dsh-import-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/Chang-Tong/dsh-import-agents/actions/workflows/ci.yml)
+[![CI](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml/badge.svg)](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](https://nodejs.org/)
 [![DeepSeek Honeys](https://dshoneys.github.io/awesome-dshoneys/assets/badges/listed.svg)](https://dshoneys.github.io/awesome-dshoneys/)
 
-**dsh-import-agents** migrates **pi**, **opencode**, **codex**, **claude-code**, and **WorkBuddy (Tencent)** into [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh): sessions and chat history, the context the model actually saw (`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`, skills, project files), and scheduled automations. Context is **shared through symlinks — one real copy, every harness reading it — never copied per harness.** Sessions appear in the session list and resume with the full history; custom agents and mode prompts become discoverable dsh skills; a one-click **Sync** button in the composer runs the whole migration.
+**DSH Unified Context** (`dsh-unified-context`, 统一上下文) migrates **pi**, **opencode**, **codex**, **claude-code**, and **WorkBuddy (Tencent)** into [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh): sessions and chat history, the context the model actually saw (`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`, skills, project files), and scheduled automations. Context is **shared through symlinks — one real copy, every harness reading it — never copied per harness.** Sessions appear in the session list and resume with the full history; custom agents and mode prompts become discoverable dsh skills; a one-click **Sync** button in the composer runs the whole migration.
 
 | Resource | Link |
 | --- | --- |
 | 中文文档 | [README.zh.md](README.zh.md) |
-| npm package | [dsh-import-agents](https://www.npmjs.com/package/dsh-import-agents) |
-| Source code | [github.com/Chang-Tong/dsh-import-agents](https://github.com/Chang-Tong/dsh-import-agents) |
+| npm package | `dsh-unified-context` (publishing pending; the previous `dsh-import-agents` stays at 0.3.1) |
+| Source code | [github.com/Chang-Tong/dsh-unified-context](https://github.com/Chang-Tong/dsh-unified-context) |
 
 ## Table of Contents
 
@@ -72,17 +71,17 @@ Tool calls survive the import as real trajectory entries — the **Trajectory** 
 
 ## Installation
 
-The plugin is published on **npm** as `dsh-import-agents` and declares a `dsh.bundle`, so the official one-command installer activates it automatically.
+The plugin declares a `dsh.bundle`, so the official installer activates it automatically. The npm package is being renamed to **`dsh-unified-context`**; until that name is published, install from **GitHub** or a local checkout (the previous `dsh-import-agents` package remains available at 0.3.1).
 
 ### One command (recommended)
 
 ```sh
-dsh plugin --profile web add dsh-import-agents
+dsh plugin --profile web add github:Chang-Tong/dsh-unified-context
 ```
 
 `dsh plugin add` installs the package **and** appends it to the profile's bundle list (the layer is active — no manual config). Then restart `dsh web` and refresh the page.
 
-> Every `pnpm` verb works through `dsh plugin --profile <name>` — e.g. `dsh plugin --profile web remove dsh-import-agents` uninstalls.
+> Every `pnpm` verb works through `dsh plugin --profile <name>` — e.g. `dsh plugin --profile web remove dsh-unified-context` uninstalls.
 
 ### Install sources (spec)
 
@@ -90,14 +89,14 @@ The `<spec>` argument is a standard pnpm package spec:
 
 | Source | Command |
 | --- | --- |
-| npm (latest) | `dsh plugin --profile web add dsh-import-agents` |
-| npm (exact / range) | `dsh plugin --profile web add dsh-import-agents@0.2.4` · `@^0.2` |
-| GitHub (short) | `dsh plugin --profile web add github:Chang-Tong/dsh-import-agents` |
-| GitHub (pinned commit) | `dsh plugin --profile web add github:Chang-Tong/dsh-import-agents#<sha>` |
-| Git URL | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-import-agents.git` · `#v0.2.4` |
-| Local checkout | `cd <checkout> && dsh plugin --profile web add .` or `file:/path/to/dsh-import-agents` |
-| Dev link | `dsh plugin --profile web add link:/path/to/dsh-import-agents` |
-| Tarball | `dsh plugin --profile web add ./dsh-import-agents-0.2.4.tgz` (or an `https://…` URL) |
+| npm (latest, after publish) | `dsh plugin --profile web add dsh-unified-context` |
+| npm (exact / range, after publish) | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
+| GitHub (short) | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context` |
+| GitHub (pinned commit) | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context#<sha>` |
+| Git URL | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.2.4` |
+| Local checkout | `cd <checkout> && dsh plugin --profile web add .` or `file:/path/to/dsh-unified-context` |
+| Dev link | `dsh plugin --profile web add link:/path/to/dsh-unified-context` |
+| Tarball | `dsh plugin --profile web add ./dsh-unified-context-0.2.4.tgz` (or an `https://…` URL) |
 
 Notes:
 
@@ -113,8 +112,8 @@ Notes:
 
 ```sh
 # optional sanity checks
-npm view dsh-import-agents version     # latest published version
-pnpm list dsh-import-agents            # installed in the profile
+npm view dsh-unified-context version     # latest published version
+pnpm list dsh-unified-context            # installed in the profile
 ```
 
 > Disable the session-start migration prompt with `config: { offerOnStart: false }` on the inserted row. Source paths and defaults are overridable the same way — see [Configuration](#configuration).
@@ -180,7 +179,7 @@ flowchart LR
         CTX["context<br/>AGENTS.md / CLAUDE.md / CODEBUDDY.md<br/>skills / project config"]
         AU["automations<br/>codex TOML + WorkBuddy SQLite"]
     end
-    subgraph plugin["dsh-import-agents"]
+    subgraph plugin["dsh-unified-context"]
         R["readers<br/>pi / opencode / codex / claude / workbuddy"]
         C["convert<br/>turn structure + tool events<br/>(real tool results when recorded)"]
         W["write<br/>dsh JSONL / ctx.sessionPersistence"]
@@ -283,11 +282,11 @@ Not carried: the source model and reasoning effort (the scheduled conversation u
 | `skillsRoot` | `$DSH_AGENTS_HOME/skills` | skills output root |
 | `toolTruncate` | `1000` | tool-call arguments truncation (chars) |
 
-The migration prompt only fires for brand-new **top-level** sessions (startup, not subagents) that have a `cwd` and unimported history. Per-project decisions and the global agents decision are stored in `$DSH_HOME/import-pi-opencode-state.json`; headless environments without a UI provider silently skip the prompt.
+The migration prompt only fires for brand-new **top-level** sessions (startup, not subagents) that have a `cwd` and unimported history. Per-project decisions and the global agents decision are stored in `$DSH_HOME/unified-context-state.json`; headless environments without a UI provider silently skip the prompt.
 
 ## Testing
 
-- `verify.mts` — mounts the **real** dsh JSONL backend + skill provider on staged output (`node --import tsx/esm ../dsh-import-agents/verify.mts <sessions-root> <skills-root>` from the dsh checkout) → expects `SESSIONS ALL PASS / SKILLS ALL PASS`.
+- `verify.mts` — mounts the **real** dsh JSONL backend + skill provider on staged output (`node --import tsx/esm ../dsh-unified-context/verify.mts <sessions-root> <skills-root>` from the dsh checkout) → expects `SESSIONS ALL PASS / SKILLS ALL PASS`.
 - `plugin/plugin-test.mts` — end-to-end: loads the plugin on a real cordis context, runs the commands and the session-start migration offer, asserts idempotency and state persistence.
 - `scripts/e2e-commands.mjs` — manual end-to-end for the new commands: mounts the plugin on a real cordis command runtime and invokes `/link-context` (apply in an isolated fake HOME, then a real-HOME dry run) and `/import-automations` (in-memory schedule: created paused, re-run created 0 skipped 11).
 - `tests/` — Vitest component tests for the Sync button (`sync-button.spec.tsx`, `sync-button-hide.spec.tsx`), reader tests (`opencode-reader.spec.ts`, `workbuddy-reader.spec.ts`), context-linker tests (`context.spec.ts`), automation tests (`automations.spec.ts`, `workbuddy-automations.spec.ts`), real-tool-result conversion (`convert-tool-result.spec.ts`), plus `attach-workspaces.spec.ts`.
@@ -317,7 +316,7 @@ To avoid double execution while the source automation (Codex/WorkBuddy) is still
 Not into the shared instruction files: they are WorkBuddy-native identity/memory files with no single-file dsh equivalent, and they remain where WorkBuddy reads them. WorkBuddy **skills** and the project `CODEBUDDY.md` are part of the shared context.
 
 **Will it keep asking me to migrate?**
-Only while unimported sessions exist, and only per project. Once you decline or an import completes, the decision is remembered in `$DSH_HOME/import-pi-opencode-state.json`.
+Only while unimported sessions exist, and only per project. Once you decline or an import completes, the decision is remembered in `$DSH_HOME/unified-context-state.json`.
 
 **Why do I need to refresh after a dsh restart?**
 The old page's RPC connection is gone after a restart; commands (and the Sync button) fail until you refresh.

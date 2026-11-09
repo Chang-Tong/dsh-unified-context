@@ -2,14 +2,14 @@
 
 [中文版](CONTRIBUTING.zh.md) | English
 
-Thanks for your interest in contributing to **dsh-import-agents**!
+Thanks for your interest in contributing to **dsh-unified-context**!
 
 The project is small and maintained by one person, but every form of help matters. Here is how you can contribute:
 
 ## Ways to contribute
 
-- **Report bugs** — open an [issue](https://github.com/Chang-Tong/dsh-import-agents/issues/new) with the source tool, the import command you ran, and the error output. Minimal reproduction steps help a lot.
-- **Request features** — open an issue or start a [discussion](https://github.com/Chang-Tong/dsh-import-agents/discussions). Tell us which tool's format you want imported next.
+- **Report bugs** — open an [issue](https://github.com/Chang-Tong/dsh-unified-context/issues/new) with the source tool, the import command you ran, and the error output. Minimal reproduction steps help a lot.
+- **Request features** — open an issue or start a [discussion](https://github.com/Chang-Tong/dsh-unified-context/discussions). Tell us which tool's format you want imported next.
 - **Spread the word** — star the repo, write a blog post, share the project in your team. The plugin lives or dies by discoverability.
 - **Help others** — answer questions in Discussions and Issues.
 - **Add the topic** — if you build your own dsh plugin, add the `dsh-plugin` topic to your repo so the ecosystem is easier to find (per [deepseek-harness CONTRIBUTING](https://github.com/deepseek-ai/deepseek-harness/blob/master/CONTRIBUTING.md)).
@@ -28,11 +28,11 @@ npx vitest run        # component tests
 
 ```sh
 # from a deepseek-harness checkout
-node --import tsx/esm ../dsh-import-agents/verify.mts <sessions-root> <skills-root>
+node --import tsx/esm ../dsh-unified-context/verify.mts <sessions-root> <skills-root>
 # expects: SESSIONS ALL PASS / SKILLS ALL PASS
 
 # plugin end-to-end (loads the plugin on a real cordis context)
-node --import tsx/esm ../dsh-import-agents/plugin/plugin-test.mts
+node --import tsx/esm ../dsh-unified-context/plugin/plugin-test.mts
 # expects: PLUGIN TEST PASS
 ```
 

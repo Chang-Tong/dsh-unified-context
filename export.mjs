@@ -76,7 +76,7 @@ function renderSession(source, header, messages, options) {
     `- 创建时间: ${fmtTime(header.createdAt)}`,
     `- 消息数: ${messages.length}`,
     '',
-    '> 本文件由 import-pi-opencode 的 export.mjs 从原始会话数据转写。',
+    '> 本文件由 dsh-unified-context 的 export.mjs 从原始会话数据转写。',
     '> 同一份历史也已导入 dsh（会话 id 前缀 pi- / oc- / codex- / claude- / wb-），可在 dsh 会话列表中恢复继续对话。',
     '',
   ]

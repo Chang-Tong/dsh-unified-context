@@ -1,5 +1,5 @@
 /**
- * 会话开始时主动询问是否迁移 pi/opencode 数据。
+ * 会话开始时主动询问是否迁移各 Harness 的历史数据。
  *
  * 挂在 `agent/session-start`（source === 'startup'，非 subagent）上：
  * 1. 过滤：只有带 cwd 的顶层新会话才会触发；
@@ -8,7 +8,7 @@
  * 3. 询问：经 ctx.userQuestions.ask() 弹 UI 问题（无 provider 时静默跳过）；
  * 4. 执行：按用户选择导入会话 / agents，并注入一条 notice 告知结果；
  * 5. 记忆：per-project 的「不导入」与全局 agents 决定写入
- *    $DSH_HOME/import-pi-opencode-state.json，避免每次新会话重复打扰。
+ *    $DSH_HOME/unified-context-state.json，避免每次新会话重复打扰。
  */
 
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
@@ -23,7 +23,9 @@ import { listClaudeSessions, parseClaudeSession } from '../lib/claude-reader.mjs
 import { listWorkbuddySessions } from '../lib/workbuddy-reader.mjs'
 import { importAgents, importSessions } from './import-service.mjs'
 
-const STATE_FILE = 'import-pi-opencode-state.json'
+const STATE_FILE = 'unified-context-state.json'
+/** Pre-rename state file; read once so existing per-project decisions survive the rename. */
+const LEGACY_STATE_FILE = 'import-pi-opencode-state.json'
 
 /** 两个 cwd 是否属于同一项目（相等，或一方在另一方目录内部且后者是真实项目而非全局根）。 */
 export function sameProject(a, b) {
@@ -37,17 +39,18 @@ export function sameProject(a, b) {
 
 /** 读取 per-project 决定状态；缺失或损坏时回退为空状态。 */
 export function loadState() {
-  const path = join(dshHome(), STATE_FILE)
-  try {
-    const parsed = JSON.parse(readFileSync(path, 'utf8'))
-    if (parsed !== null && typeof parsed === 'object') {
-      return {
-        projects: parsed.projects ?? {},
-        agents: parsed.agents,
+  for (const name of [STATE_FILE, LEGACY_STATE_FILE]) {
+    try {
+      const parsed = JSON.parse(readFileSync(join(dshHome(), name), 'utf8'))
+      if (parsed !== null && typeof parsed === 'object') {
+        return {
+          projects: parsed.projects ?? {},
+          agents: parsed.agents,
+        }
       }
+    } catch {
+      // Try the next name (new, then the pre-rename file), then start empty.
     }
-  } catch {
-    // 首次运行或文件损坏：从空状态开始。
   }
   return { projects: {}, agents: undefined }
 }
@@ -176,7 +179,7 @@ export async function maybeOfferMigration(ctx, agent, config) {
     answer = await ctx.userQuestions.ask({ questions })
   } catch (error) {
     // 无 UI provider（如 headless）或询问被取消：静默跳过，不记状态。
-    ctx.logger.info(`[import-pi-opencode] 迁移询问跳过: ${error.message}`)
+    ctx.logger.info(`[dsh-unified-context] 迁移询问跳过: ${error.message}`)
     return
   }
   const pick = id => answer.answers.find(item => item.id === id)?.selected ?? []
@@ -191,7 +194,7 @@ export async function maybeOfferMigration(ctx, agent, config) {
     for (const source of ['pi', 'opencode', 'codex', 'claude-code', 'workbuddy']) {
       lines.push(...await importSessions(ctx.sessionPersistence, source, options))
     }
-    for (const line of lines) ctx.logger.info(`[import-pi-opencode] ${line}`)
+    for (const line of lines) ctx.logger.info(`[dsh-unified-context] ${line}`)
     state.projects[cwd] = { ...(state.projects[cwd] ?? {}), sessions: 'imported' }
   } else if (sessionsChoice === "Don't import") {
     state.projects[cwd] = { ...(state.projects[cwd] ?? {}), sessions: 'declined' }
@@ -200,7 +203,7 @@ export async function maybeOfferMigration(ctx, agent, config) {
   const agentsChoice = pick('migrate-agents')[0]
   if (agentsChoice === 'Import agents/skills') {
     const lines = importAgents(config)
-    for (const line of lines) ctx.logger.info(`[import-pi-opencode] ${line}`)
+    for (const line of lines) ctx.logger.info(`[dsh-unified-context] ${line}`)
     state.agents = 'imported'
   } else if (agentsChoice === 'Skip') {
     state.agents = 'declined'
@@ -214,7 +217,7 @@ export async function maybeOfferMigration(ctx, agent, config) {
       id: crypto.randomUUID(),
       role: 'user',
       content: [{ type: 'text', text: `${summary}. Find them in the session list to continue the conversations.` }],
-      source: { kind: 'plugin', plugin: 'import-pi-opencode', form: 'notice', summary },
+      source: { kind: 'plugin', plugin: 'dsh-unified-context', form: 'notice', summary },
     })
   }
 }

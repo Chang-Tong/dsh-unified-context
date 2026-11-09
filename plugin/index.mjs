@@ -1,5 +1,5 @@
 /**
- * dsh-import-agents
+ * dsh-unified-context
  *
  * 把 pi / opencode 的会话、聊天记录、agent 导入 dsh。
  *
@@ -26,7 +26,7 @@ import { applyContextPlan, planContext, renderContextPlan, resolveContextLayout 
 import { defaultWorkbuddyAutomationsDb } from '../lib/workbuddy-automations.mjs'
 import { defaultWorkbuddyRoot } from '../lib/workbuddy-reader.mjs'
 
-export const name = 'import-pi-opencode'
+export const name = 'dsh-unified-context'
 
 /** 需要 commands（注册命令）、sessionPersistence（写入会话）与 userQuestions（迁移询问）。 */
 export const inject = ['commands', 'sessionPersistence', 'userQuestions']
@@ -161,7 +161,7 @@ export function apply(ctx, config = {}) {
         if (source !== 'startup') return
         void maybeOfferMigration(ctx, agent, defaults)
       })
-    }, 'import-pi-opencode session-start migration offer')
+    }, 'dsh-unified-context session-start migration offer')
   }
 
   const run = async (source, input) => {

@@ -4,7 +4,7 @@
 
 Please **do not open a public issue** for security vulnerabilities. Instead, report them privately:
 
-- Open a [private security advisory](https://github.com/Chang-Tong/dsh-import-agents/security/advisories/new), or
+- Open a [private security advisory](https://github.com/Chang-Tong/dsh-unified-context/security/advisories/new), or
 - Email the maintainer: zdcheerful@hotmail.com
 
 You should receive a response within a few days. If you do not, please follow up.

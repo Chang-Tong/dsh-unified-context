@@ -2,12 +2,12 @@
 
 English | [中文版](CONTRIBUTING.zh.md)
 
-感谢你对 **dsh-import-agents** 感兴趣！项目还很小，由个人维护，但每一种帮助都很重要。你可以这样参与：
+感谢你对 **dsh-unified-context** 感兴趣！项目还很小，由个人维护，但每一种帮助都很重要。你可以这样参与：
 
 ## 参与方式
 
-- **报 Bug** —— 开一个 [issue](https://github.com/Chang-Tong/dsh-import-agents/issues/new)，说明来源工具、你执行的导入命令和报错输出。能附上最小复现步骤最好。
-- **提需求** —— 开 issue 或在 [Discussions](https://github.com/Chang-Tong/dsh-import-agents/discussions) 发帖，告诉我们你希望下一个支持导入哪个工具。
+- **报 Bug** —— 开一个 [issue](https://github.com/Chang-Tong/dsh-unified-context/issues/new)，说明来源工具、你执行的导入命令和报错输出。能附上最小复现步骤最好。
+- **提需求** —— 开 issue 或在 [Discussions](https://github.com/Chang-Tong/dsh-unified-context/discussions) 发帖，告诉我们你希望下一个支持导入哪个工具。
 - **帮忙传播** —— 给仓库点个 ⭐、写博客、分享给团队。这个插件靠可发现性存活。
 - **帮助他人** —— 在 Discussions / Issues 里回答问题。
 - **加 topic** —— 如果你也做了 dsh 插件，记得给仓库加 `dsh-plugin` 话题（参考 [deepseek-harness 贡献指南](https://github.com/deepseek-ai/deepseek-harness/blob/master/CONTRIBUTING.zh.md)），让生态更容易被发现。
@@ -26,11 +26,11 @@ npx vitest run        # 组件测试
 
 ```sh
 # 在 deepseek-harness 仓库根目录执行
-node --import tsx/esm ../dsh-import-agents/verify.mts <sessions根> <skills根>
+node --import tsx/esm ../dsh-unified-context/verify.mts <sessions根> <skills根>
 # 期望输出: SESSIONS ALL PASS / SKILLS ALL PASS
 
 # 插件端到端（在真实 cordis 上下文加载插件）
-node --import tsx/esm ../dsh-import-agents/plugin/plugin-test.mts
+node --import tsx/esm ../dsh-unified-context/plugin/plugin-test.mts
 # 期望输出: PLUGIN TEST PASS
 ```
 

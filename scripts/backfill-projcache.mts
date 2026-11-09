@@ -8,7 +8,7 @@
  * `$DSH_HOME/storages/session_projcache.json`。
  *
  * 用法（deepseek-harness 仓库根运行；之后重启 dsh web 使缓存生效）：
- *   node --import tsx/esm ../dsh-import-agents/scripts/backfill-projcache.mts
+ *   node --import tsx/esm ../dsh-unified-context/scripts/backfill-projcache.mts
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { Context } from '@deepseek-ai/cordis'

@@ -22,4 +22,4 @@ jobs:
         run: npx vitest run
       # 完整端到端测试（plugin-test.mts / verify.mts）依赖 deepseek-harness
       # checkout（tsx + tsconfig paths），CI 里无法直接运行；本地用：
-      #   node --import tsx/esm ../dsh-import-agents/plugin/plugin-test.mts
+      #   node --import tsx/esm ../dsh-unified-context/plugin/plugin-test.mts

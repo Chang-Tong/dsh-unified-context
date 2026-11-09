@@ -4,7 +4,7 @@
  * 在 deepseek-harness 仓库根运行（tsx 需要仓库 tsconfig paths 解析
  * @deepseek-ai/* 工作区包）：
  *
- *   node --import tsx/esm ../import-pi-opencode/plugin/plugin-test.mts
+ *   node --import tsx/esm ../dsh-unified-context/plugin/plugin-test.mts
  *
  * 覆盖：
  *   1. 四个斜杠命令注册与执行（import-pi / import-opencode / import-agents）
@@ -110,7 +110,7 @@ const offerSession2 = ctx.sessions.prepare(SessionId('offer-test-session-2'), {
   meta: { cwd: '/Users/dongair/project/Tributo/Tributo' },
 })
 await maybeOfferMigration(ctx, { session: offerSession2, inject: () => {} }, sourceConfig)
-const statePath = join(process.env.DSH_HOME, 'import-pi-opencode-state.json')
+const statePath = join(process.env.DSH_HOME, 'unified-context-state.json')
 const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : {}
 console.log(`state file: ${JSON.stringify(state)}`)
 if (state.projects?.['/Users/dongair/project/Tributo/Tributo']?.sessions !== 'imported') {

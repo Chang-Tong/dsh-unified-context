@@ -4,7 +4,7 @@
  * 在 deepseek-harness 仓库根运行（tsx 需要仓库的 tsconfig paths 才能解析
  * @deepseek-ai/* 工作区包）：
  *
- *   node --import tsx/esm ../import-pi-opencode/verify.mts \
+ *   node --import tsx/esm ../dsh-unified-context/verify.mts \
  *     /tmp/check/sessions /tmp/check/skills
  *
  * 参数 1: 会话根（import.mjs --sessions-root 的产物）

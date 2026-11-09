@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [0.4.0] - 2026-11-09
 
+### Renamed
+
+- The project is now **DSH Unified Context** (`dsh-unified-context`, 统一上下文). The GitHub repository (`Chang-Tong/dsh-unified-context`), npm package name, cordis plugin id, docs, badges and install commands use the new name; slash commands are unchanged. The previous `dsh-import-agents` package (0.3.1) stays installable, and the migration-prompt state file is read from the old name once and then written as `$DSH_HOME/unified-context-state.json`.
+
 ### Added
 
 - **WorkBuddy (Tencent) is now a fifth migration source.** Sessions are read from `~/.workbuddy/projects/<project>/<session>.jsonl` (`wb-<uuid>` ids), including reasoning, tool calls and — unlike the other sources — **real tool results** from `function_call_result` records; injected `<system-reminder>` context is stripped so only the actual `<user_query>` turn is imported. WorkBuddy skills (`~/.workbuddy/skills`), project `CODEBUDDY.md` and WorkBuddy automations are covered too. New slash command `/import-workbuddy`; `/import-all` and the session-start migration prompt now include WorkBuddy.

@@ -7,7 +7,7 @@
  * fold 标题与基础统计，写入 `$DSH_HOME/storages/session_projcache.json`。
  *
  * 用法（deepseek-harness 仓库根运行；之后重启 dsh web 使缓存生效）：
- *   node --import tsx/esm ../dsh-import-agents/scripts/backfill-projcache.mjs
+ *   node --import tsx/esm ../dsh-unified-context/scripts/backfill-projcache.mjs
  */
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'

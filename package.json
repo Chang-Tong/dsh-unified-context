@@ -1,8 +1,8 @@
 {
-  "name": "dsh-import-agents",
+  "name": "dsh-unified-context",
   "version": "0.4.0",
   "packageManager": "pnpm@11.7.0",
-  "description": "Import pi / opencode sessions, chat history, and agents into DeepSeek Harness (dsh): slash commands, session-start migration prompt, and a one-click Sync button in the composer.",
+  "description": "DSH Unified Context (统一上下文): migrate pi/opencode/codex/claude-code/WorkBuddy sessions into DeepSeek Harness, share one AGENTS.md/skill context through symlinks, and migrate automations.",
   "type": "module",
   "main": "plugin/index.mjs",
   "exports": {
@@ -32,12 +32,16 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "cordis.patch.yml"
+    "cordis.patch.yml",
+    "import.mjs",
+    "export.mjs",
+    "README.zh.md"
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
     "import": "node import.mjs",
-    "export": "node export.mjs"
+    "export": "node export.mjs",
+    "e2e": "node scripts/e2e-commands.mjs"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": ">=0.1.0",
@@ -54,5 +58,27 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "vitest": "^4.1.10"
-  }
+  },
+  "homepage": "https://github.com/Chang-Tong/dsh-unified-context",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Chang-Tong/dsh-unified-context.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Chang-Tong/dsh-unified-context/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "migration",
+    "context",
+    "agents-md",
+    "skills",
+    "workbuddy",
+    "codex",
+    "claude-code",
+    "opencode",
+    "pi"
+  ]
 }

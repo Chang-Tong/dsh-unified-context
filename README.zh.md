@@ -1,23 +1,22 @@
 <!--
-dsh-import-agents — 以 MIT License 发布。
+dsh-unified-context — 以 MIT License 发布。
 -->
-# dsh-import-agents
+# DSH Unified Context
 
 [English](README.md) · **简体中文**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/dsh-import-agents)](https://www.npmjs.com/package/dsh-import-agents)
-[![CI](https://github.com/Chang-Tong/dsh-import-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/Chang-Tong/dsh-import-agents/actions/workflows/ci.yml)
+[![CI](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml/badge.svg)](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](https://nodejs.org/)
 [![DeepSeek Honeys](https://dshoneys.github.io/awesome-dshoneys/assets/badges/listed.svg)](https://dshoneys.github.io/awesome-dshoneys/)
 
-**dsh-import-agents** 把 **pi**、**opencode**、**codex**、**claude-code** 与 **WorkBuddy（腾讯）** 迁移进 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）：会话与聊天记录、模型真正看到的上下文（`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`、skills、项目配置），以及定时自动化任务。上下文用**符号链接共享同一份真文件**——不是每个 Harness 各复制一份。导入的会话出现在会话列表、可携带完整历史继续对话；自定义 agent 与模式提示词变成可发现的 dsh skills；composer 里的一键 **同步** 按钮即可完成全部迁移。
+**DSH Unified Context**（`dsh-unified-context`，统一上下文）把 **pi**、**opencode**、**codex**、**claude-code** 与 **WorkBuddy（腾讯）** 迁移进 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）：会话与聊天记录、模型真正看到的上下文（`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`、skills、项目配置），以及定时自动化任务。上下文用**符号链接共享同一份真文件**——不是每个 Harness 各复制一份。导入的会话出现在会话列表、可携带完整历史继续对话；自定义 agent 与模式提示词变成可发现的 dsh skills；composer 里的一键 **同步** 按钮即可完成全部迁移。
 
 | 资源 | 链接 |
 | --- | --- |
 | English README | [README.md](README.md) |
-| npm 包 | [dsh-import-agents](https://www.npmjs.com/package/dsh-import-agents) |
-| 源码 | [github.com/Chang-Tong/dsh-import-agents](https://github.com/Chang-Tong/dsh-import-agents) |
+| npm 包 | `dsh-unified-context`（待发布；旧的 `dsh-import-agents` 仍为 0.3.1） |
+| 源码 | [github.com/Chang-Tong/dsh-unified-context](https://github.com/Chang-Tong/dsh-unified-context) |
 
 ## 目录
 
@@ -72,17 +71,17 @@ dsh-import-agents — 以 MIT License 发布。
 
 ## 安装
 
-插件已发布到 **npm**：`dsh-import-agents`，并声明了 `dsh.bundle`——官方一键安装命令会自动把它激活到 profile 里，无需手动配置。
+插件声明了 `dsh.bundle`，官方安装命令会自动把它激活到 profile 里。npm 包名正在迁移为 **`dsh-unified-context`**；在该名字发布之前，请从 **GitHub** 或本地 checkout 安装（旧的 `dsh-import-agents` 包仍可用，版本 0.3.1）。
 
 ### 一键安装（推荐）
 
 ```sh
-dsh plugin --profile web add dsh-import-agents
+dsh plugin --profile web add github:Chang-Tong/dsh-unified-context
 ```
 
 `dsh plugin add` 会安装包**并自动追加到 profile 的 bundle 列表**（层直接激活，无需手动配置）。之后重启 `dsh web` 并刷新页面即可。
 
-> `dsh plugin --profile <名字>` 后面可以跟任意 pnpm 子命令——例如 `dsh plugin --profile web remove dsh-import-agents` 卸载。
+> `dsh plugin --profile <名字>` 后面可以跟任意 pnpm 子命令——例如 `dsh plugin --profile web remove dsh-unified-context` 卸载。
 
 ### 安装源（spec）
 
@@ -90,14 +89,14 @@ dsh plugin --profile web add dsh-import-agents
 
 | 来源 | 命令 |
 | --- | --- |
-| npm（最新版） | `dsh plugin --profile web add dsh-import-agents` |
-| npm（指定版本/范围） | `dsh plugin --profile web add dsh-import-agents@0.2.4` · `@^0.2` |
-| GitHub（短格式） | `dsh plugin --profile web add github:Chang-Tong/dsh-import-agents` |
-| GitHub（锁定 commit） | `dsh plugin --profile web add github:Chang-Tong/dsh-import-agents#<sha>` |
-| Git 完整地址 | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-import-agents.git` · `#v0.2.4` |
-| 本地 checkout | `cd <目录> && dsh plugin --profile web add .` 或 `file:/路径/dsh-import-agents` |
-| 开发链接 | `dsh plugin --profile web add link:/路径/dsh-import-agents` |
-| tarball | `dsh plugin --profile web add ./dsh-import-agents-0.2.4.tgz`（或 `https://…` 地址） |
+| npm（最新版，发布后） | `dsh plugin --profile web add dsh-unified-context` |
+| npm（指定版本/范围，发布后） | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
+| GitHub（短格式） | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context` |
+| GitHub（锁定 commit） | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context#<sha>` |
+| Git 完整地址 | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.4.0` |
+| 本地 checkout | `cd <目录> && dsh plugin --profile web add .` 或 `file:/路径/dsh-unified-context` |
+| 开发链接 | `dsh plugin --profile web add link:/路径/dsh-unified-context` |
+| tarball | `dsh plugin --profile web add ./dsh-unified-context-0.2.4.tgz`（或 `https://…` 地址） |
 
 注意事项：
 
@@ -113,8 +112,8 @@ dsh plugin --profile web add dsh-import-agents
 
 ```sh
 # 可选的自检命令
-npm view dsh-import-agents version     # 查看最新发布版本
-pnpm list dsh-import-agents            # 确认已装进 profile
+npm view dsh-unified-context version     # 查看最新发布版本
+pnpm list dsh-unified-context            # 确认已装进 profile
 ```
 
 > 想关闭「新会话主动询问迁移」：在插入行上写 `config: { offerOnStart: false }`。源路径与默认值同样可在此覆盖，见 [配置](#配置)。
@@ -180,7 +179,7 @@ flowchart LR
         CTX["上下文<br/>AGENTS.md / CLAUDE.md / CODEBUDDY.md<br/>skills / 项目配置"]
         AU["自动化<br/>codex TOML + WorkBuddy SQLite"]
     end
-    subgraph plugin["dsh-import-agents"]
+    subgraph plugin["dsh-unified-context"]
         R["reader<br/>pi / opencode / codex / claude / workbuddy"]
         C["转换<br/>turn 结构 + 工具事件<br/>（记录了就保留真实结果）"]
         W["写入<br/>dsh JSONL / ctx.sessionPersistence"]
@@ -283,11 +282,11 @@ flowchart LR
 | `skillsRoot` | `$DSH_AGENTS_HOME/skills` | skills 输出根目录 |
 | `toolTruncate` | `1000` | 工具调用参数截断长度（字符） |
 
-迁移询问只对**全新顶层**会话（startup、非 subagent）且带 `cwd`、存在未导入历史时触发。每个项目的决定与全局 agents 决定记录在 `$DSH_HOME/import-pi-opencode-state.json`；headless 等无 UI provider 的环境自动静默跳过。
+迁移询问只对**全新顶层**会话（startup、非 subagent）且带 `cwd`、存在未导入历史时触发。每个项目的决定与全局 agents 决定记录在 `$DSH_HOME/unified-context-state.json`；headless 等无 UI provider 的环境自动静默跳过。
 
 ## 测试
 
-- `verify.mts` — 在 staging 目录上用**真实** dsh JSONL 后端 + skill provider 读回导入产物（在 dsh 仓库根执行 `node --import tsx/esm ../dsh-import-agents/verify.mts <sessions根> <skills根>`）→ 期望输出 `SESSIONS ALL PASS / SKILLS ALL PASS`。
+- `verify.mts` — 在 staging 目录上用**真实** dsh JSONL 后端 + skill provider 读回导入产物（在 dsh 仓库根执行 `node --import tsx/esm ../dsh-unified-context/verify.mts <sessions根> <skills根>`）→ 期望输出 `SESSIONS ALL PASS / SKILLS ALL PASS`。
 - `plugin/plugin-test.mts` — 端到端：在真实 cordis 上下文加载插件，跑命令与新会话迁移询问，断言幂等与状态持久化。
 - `scripts/e2e-commands.mjs` — 新命令的端到端手测：在真实 cordis 命令运行时挂载插件，调用 `/link-context`（隔离 HOME 里真实应用 + 真 HOME dry-run）与 `/import-automations`（内存 schedule：创建为暂停，重跑 created 0 / skipped 11）。
 - `tests/` — Vitest：同步按钮（`sync-button.spec.tsx`、`sync-button-hide.spec.tsx`）、reader（`opencode-reader.spec.ts`、`workbuddy-reader.spec.ts`）、上下文链接器（`context.spec.ts`）、自动化（`automations.spec.ts`、`workbuddy-automations.spec.ts`）、真实工具结果转换（`convert-tool-result.spec.ts`）与 `attach-workspaces.spec.ts`。
@@ -317,7 +316,7 @@ pi、opencode、codex、claude-code 只保存调用，所以它们的导入把�
 不会并入共享指令文件：它们是 WorkBuddy 原生的身份/记忆文件，dsh 没有对应的单文件机制，继续留在 WorkBuddy 读取的位置。WorkBuddy 的 **skills** 与项目 `CODEBUDDY.md` 属于共享上下文。
 
 **会不会一直问我迁移？**
-只在存在未导入会话时问，且按项目记忆。选了「不导入」或导入完成后，决定写入 `$DSH_HOME/import-pi-opencode-state.json`，不再打扰。
+只在存在未导入会话时问，且按项目记忆。选了「不导入」或导入完成后，决定写入 `$DSH_HOME/unified-context-state.json`，不再打扰。
 
 **为什么 dsh 重启后必须刷新页面？**
 重启后旧页面的 RPC 连接已断开，未刷新时点同步或任何命令都会失败。

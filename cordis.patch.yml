@@ -1,4 +1,4 @@
-# dsh-import-agents — the bundle layer applied when a profile lists this package.
+# dsh-unified-context — the bundle layer applied when a profile lists this package.
 # Insert the plugin rows: the slash commands (/import-pi, /import-opencode,
 # /import-codex, /import-claude-code, /import-workbuddy, /import-agents,
 # /link-context, /import-automations, /import-all, /attach-workspaces), the
@@ -6,5 +6,5 @@
 # the composer tool row).
 # Disable the migration prompt with: config: { offerOnStart: false }
 - insert:
-    - id: import-pi-opencode
-      name: dsh-import-agents
+    - id: dsh-unified-context
+      name: dsh-unified-context
