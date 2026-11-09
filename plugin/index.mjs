@@ -18,9 +18,13 @@
  * 无 default export（namespace 插件），避免 Loader 丢弃 inject。
  */
 
-import { importSessions, importAgents } from './import-service.mjs'
+import { importAgents, importSessions } from './import-service.mjs'
 import { maybeOfferMigration } from './migrate-on-start.mjs'
 import { attachSessionsToWorkspaces, listImportedSessions } from './attach-workspaces.mjs'
+import { importAutomations } from './automations-import.mjs'
+import { applyContextPlan, planContext, renderContextPlan, resolveContextLayout } from '../lib/context.mjs'
+import { defaultWorkbuddyAutomationsDb } from '../lib/workbuddy-automations.mjs'
+import { defaultWorkbuddyRoot } from '../lib/workbuddy-reader.mjs'
 
 export const name = 'import-pi-opencode'
 
@@ -78,9 +82,65 @@ function defaultOptions() {
     opencodeDb: `${home}/.local/share/opencode/opencode.db`,
     opencodeConfig: `${home}/.config/opencode`,
     codexRoot: `${home}/.codex/sessions`,
+    codexHome: `${home}/.codex`,
     claudeRoot: `${home}/.claude/projects`,
+    workbuddyRoot: defaultWorkbuddyRoot(),
+    workbuddyAutomationsDb: defaultWorkbuddyAutomationsDb(),
     skillsRoot: joinAgentsSkills(),
     toolTruncate: 1000,
+    timeZone: 'Asia/Shanghai',
+  }
+}
+
+/** Parse slash-command flags: `--name value`, `--name=value`, and boolean `--name`. */
+function parseFlags(rawInput) {
+  const flags = {}
+  const booleanFlags = new Set(['dry-run', 'activate', 'json', 'push', 'no-push'])
+  const tokens = rawInput.trim().split(/\s+/).filter(Boolean)
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i]
+    if (!token.startsWith('--')) continue
+    const eq = token.indexOf('=')
+    if (eq >= 0) {
+      flags[token.slice(2, eq)] = token.slice(eq + 1)
+      continue
+    }
+    const name = token.slice(2)
+    if (booleanFlags.has(name) || tokens[i + 1] === undefined || tokens[i + 1].startsWith('--')) flags[name] = true
+    else flags[name] = tokens[++i]
+  }
+  return flags
+}
+
+/** A flag that may list ids either comma-separated or by repetition. */
+function flagList(value) {
+  if (value === undefined) return []
+  const raw = Array.isArray(value) ? value : String(value).split(',')
+  return raw.map(item => item.trim()).filter(Boolean)
+}
+
+/** Working directory of the invoking conversation (default project for context linking). */
+async function sessionCwd(ctx, agent) {
+  try {
+    const snapshots = await ctx.sessionPersistence.list()
+    const match = snapshots.find(snapshot => snapshot.header.id === agent.session.id)
+    return match?.header.cwd
+  } catch {
+    return undefined
+  }
+}
+
+/** Automation-import options shared by /import-automations and /import-all. */
+function automationOptions(defaults, flags) {
+  return {
+    codexHome: defaults.codexHome,
+    workbuddyRoot: defaults.workbuddyRoot,
+    workbuddyAutomationsDb: defaults.workbuddyAutomationsDb,
+    timeZone: typeof flags.timezone === 'string' ? flags.timezone : defaults.timeZone,
+    activate: flags.activate === true,
+    only: flagList(flags.only),
+    exclude: flagList(flags.exclude),
+    dryRun: flags['dry-run'] === true,
   }
 }
 
@@ -139,6 +199,44 @@ export function apply(ctx, config = {}) {
   })
 
   ctx.commands.register({
+    name: 'import-workbuddy',
+    description: 'Import WorkBuddy (Tencent) sessions (chat history) into dsh (re-runs skip existing)',
+    input: { hint: '[--limit N] [--project 子串] [--since ISO|ms] [--no-tools] [--tool-truncate N]' },
+    handler: invocation => run('workbuddy', parseInput(invocation.rawInput)),
+  })
+
+  ctx.commands.register({
+    name: 'link-context',
+    description: 'Share ONE context (AGENTS.md/CODEBUDDY.md, skills) across dsh/codex/claude/pi/opencode/WorkBuddy with symlinks — never copies',
+    input: { hint: '[--project DIR] [--dry-run]' },
+    handler: async (invocation) => {
+      const flags = parseFlags(invocation.rawInput)
+      const projectDir = typeof flags.project === 'string' ? flags.project : await sessionCwd(ctx, invocation.agent)
+      const plan = planContext(resolveContextLayout({ projectDir, pushSkills: flags.push === true }))
+      const lines = renderContextPlan(plan)
+      if (flags['dry-run'] === true) {
+        lines.push('[context] dry run: nothing was written')
+        return { kind: 'success', text: lines.join('\n') }
+      }
+      const result = applyContextPlan(plan)
+      lines.push(`[context] applied ${result.applied.length} of ${plan.actions.length} change(s); ${result.failed.length} failed`)
+      for (const failure of result.failed) lines.push(`  [failed] ${failure.path}: ${failure.error}`)
+      return { kind: 'success', text: lines.join('\n') }
+    },
+  })
+
+  ctx.commands.register({
+    name: 'import-automations',
+    description: 'Migrate Codex + WorkBuddy automations into dsh scheduled tasks (imported paused by default)',
+    input: { hint: '[--only id] [--exclude id] [--activate] [--timezone Asia/Shanghai] [--dry-run]' },
+    handler: async (invocation) => {
+      const flags = parseFlags(invocation.rawInput)
+      const result = await importAutomations(ctx, automationOptions(defaults, flags), invocation.agent.session.id)
+      return { kind: 'success', text: result.lines.join('\n') }
+    },
+  })
+
+  ctx.commands.register({
     name: 'attach-workspaces',
     description: 'Attach imported sessions to their cwd-matched workspace (absolute path disambiguates same-name projects)',
     handler: async () => {
@@ -159,16 +257,24 @@ export function apply(ctx, config = {}) {
 
   ctx.commands.register({
     name: 'import-all',
-    description: 'Import pi/opencode sessions, chat history and agents (= import-pi + import-opencode + import-agents)',
-    input: { hint: '[--limit N] [--project 子串] [--since ISO|ms] [--no-tools] [--tool-truncate N]' },
+    description: 'Full migration: sessions from all five harnesses + agents/skills + shared context links + automations (imported paused)',
+    input: { hint: '[--limit N] [--project 子串] [--since ISO|ms] [--no-tools] [--tool-truncate N] [--context-project DIR] [--activate]' },
     handler: async (invocation) => {
       const input = parseInput(invocation.rawInput)
+      const flags = parseFlags(invocation.rawInput)
       const options = resolveOptions(input, defaults)
       const lines = []
-      for (const source of ['pi', 'opencode', 'codex', 'claude-code']) {
+      for (const source of ['pi', 'opencode', 'codex', 'claude-code', 'workbuddy']) {
         lines.push(...await importSessions(ctx.sessionPersistence, source, options))
       }
       lines.push(...importAgents(defaults))
+      const projectDir = typeof flags['context-project'] === 'string' ? flags['context-project'] : await sessionCwd(ctx, invocation.agent)
+      const contextPlan = planContext(resolveContextLayout({ projectDir, pushSkills: flags.push === true }))
+      const contextResult = applyContextPlan(contextPlan)
+      lines.push(`[context] linked ${contextResult.applied.length} item(s), ${contextPlan.conflicts.length} conflict(s), ${contextResult.failed.length} failed`)
+      for (const conflict of contextPlan.conflicts.slice(0, 8)) lines.push(`  [conflict] ${conflict.path}: ${conflict.reason}`)
+      const automations = await importAutomations(ctx, automationOptions(defaults, flags), invocation.agent.session.id)
+      lines.push(...automations.lines)
       return { kind: 'success', text: lines.join('\n') }
     },
   })

@@ -62,8 +62,8 @@ function isChineseUi(): boolean {
 /** 当前语言下的按钮文案。 */
 function labels() {
   return isChineseUi()
-    ? { idle: '同步', busy: '同步中…', failed: '同步失败', title: '同步 pi / opencode 的历史会话、agents、skills（/import-all）' }
-    : { idle: 'Sync', busy: 'Syncing…', failed: 'Sync failed', title: 'Sync pi / opencode sessions, agents and skills (/import-all)' }
+    ? { idle: '同步', busy: '同步中…', failed: '同步失败', title: '同步所有 Harness 的会话、skills、上下文与自动化（/import-all）' }
+    : { idle: 'Sync', busy: 'Syncing…', failed: 'Sync failed', title: 'Sync sessions, skills, context and automations from all harnesses (/import-all)' }
 }
 
 /**

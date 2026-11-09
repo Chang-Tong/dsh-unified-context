@@ -43,7 +43,7 @@ const agent = { session }
 const before = await ctx.sessionPersistence.list()
 console.log(`before: ${before.length} sessions`)
 
-for (const [name, input] of [['import-pi', '--limit 1'], ['import-opencode', '--limit 1'], ['import-codex', '--limit 1'], ['import-claude-code', '--limit 1'], ['import-agents', '']]) {
+for (const [name, input] of [['import-pi', '--limit 1'], ['import-opencode', '--limit 1'], ['import-codex', '--limit 1'], ['import-claude-code', '--limit 1'], ['import-workbuddy', '--limit 1'], ['import-agents', '']]) {
   const def = ctx.commands.find(agent, name)
   if (def === undefined) throw new Error(`command ${name} not registered`)
   const result = await def.handler({ commandId: 'cmd-test-1', agent, rawInput: input, signal: new AbortController().signal })
@@ -90,6 +90,7 @@ const sourceConfig = {
   opencodeConfig: `${process.env.HOME}/.config/opencode`,
   codexRoot: `${process.env.HOME}/.codex/sessions`,
   claudeRoot: `${process.env.HOME}/.claude/projects`,
+  workbuddyRoot: `${process.env.HOME}/.workbuddy`,
   skillsRoot,
 }
 await maybeOfferMigration(ctx, offerAgent, sourceConfig)
@@ -99,7 +100,7 @@ console.log(`after offer: ${afterOffer.length} sessions`)
 const newIds = afterOffer.map(h => h.header.id).filter(id => !afterCommands.some(h => h.header.id === id))
 console.log(`newly imported by offer: ${newIds.join(', ')}`)
 if (newIds.length === 0) throw new Error('migration offer imported nothing')
-if (newIds.some(id => !/^(pi|oc|codex|claude)-/.test(id))) throw new Error('unexpected session id')
+if (newIds.some(id => !/^(pi|oc|codex|claude|wb)-/.test(id))) throw new Error('unexpected session id')
 if (injected.length !== 1) throw new Error(`expected 1 completion notice, got ${injected.length}`)
 console.log(`notice: ${injected[0].content[0].text}`)
 if (!seenQuestions[0]?.includes('migrate-sessions')) throw new Error('sessions question not asked')

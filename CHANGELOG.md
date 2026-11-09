@@ -4,6 +4,25 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-09
+
+### Added
+
+- **WorkBuddy (Tencent) is now a fifth migration source.** Sessions are read from `~/.workbuddy/projects/<project>/<session>.jsonl` (`wb-<uuid>` ids), including reasoning, tool calls and — unlike the other sources — **real tool results** from `function_call_result` records; injected `<system-reminder>` context is stripped so only the actual `<user_query>` turn is imported. WorkBuddy skills (`~/.workbuddy/skills`), project `CODEBUDDY.md` and WorkBuddy automations are covered too. New slash command `/import-workbuddy`; `/import-all` and the session-start migration prompt now include WorkBuddy.
+- **Context parity (`/link-context`, `node import.mjs context`).** The model-visible context is wider than the chat history: instructions (`AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md`), skills, and project config. The new command makes every harness read **one shared copy** with symlinks — never per-harness copies. One real file/directory (the hub under `~/.agents`) plus one link per harness read-path; identical copies are replaced with links, divergent copies are reported as conflicts and left untouched. Skill names that are not dsh-compatible are skipped with a note. Pull-only by default (each harness contributes to the dsh hub); `--push` also links hub skills back into every harness root. Project scope unifies `AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md` and converges `.agents` / `.claude` / `.codex` / `.pi` / `.workbuddy` project skills. Idempotent; project config files are left in place (every harness opens the same project directory, so nothing is copied).
+- **Automation migration (`/import-automations`, `node import.mjs automations`).** Codex automations (`~/.codex/automations/*/automation.toml`) and WorkBuddy automations (`~/Library/Application Support/WorkBuddy/automations/automations.db`) are planned as dsh scheduled tasks: the RRULE is translated to `DTSTART;TZID=Asia/Shanghai` + `RRULE`, cron-like automations get a fresh conversation in the recorded cwd, heartbeat automations target the imported Codex conversation when it exists (otherwise one reused conversation). Everything is imported **paused** by default so the source automation can be switched off first; `--activate` arms active sources directly. Model/reasoning effort, notification policy/WeChat push, per-automation skill selection and run history are not carried (documented in the README). The CLI prints the plan only — creating tasks needs the running host, via `/import-automations` or the Sync button.
+- `/import-all` (the Sync button and session-start flow) now runs the complete migration: five session sources + agents/skills + context links + paused automations.
+- `scripts/e2e-commands.mjs` — manual end-to-end harness that invokes the real slash commands on a cordis command runtime (context apply/idempotency, real-HOME dry run, automation create-paused/idempotency).
+
+### Changed
+
+- WorkBuddy's `.workbuddy/skills`, `.codebuddy/skills` and `.workbuddy/settings*.json` are part of the context model; opencode is treated as hub-native (it already reads `~/.agents/skills`), so no redundant links are pushed into its roots.
+- `--push`/pull-only split keeps the default context run non-invasive: 40-odd links instead of ~470 when pushing into every harness.
+
+### Fixed
+
+- `sync-button-hide.spec.tsx` no longer flakes under the full suite: the React act environment is enabled for jsdom tests and the auto-clear test uses fake timers instead of racing a fixed sleep.
+
 ## [0.3.1] - 2026-10-08
 
 ### Fixed

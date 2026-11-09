@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * 把 pi / opencode 的会话转写为 Markdown 文件，供任何 agent 直接阅读。
+ * 把各 Harness 的会话转写为 Markdown 文件，供任何 agent 直接阅读。
  *
  * 用法:
- *   node export.mjs [--source pi|opencode|all] [--project 子串] [--limit N]
+ *   node export.mjs [--source pi|opencode|codex|claude-code|workbuddy|all] [--project 子串] [--limit N]
  *                   [--out <目录>] [--no-reasoning] [--no-tools]
  *
  * 默认输出到 ~/.dsh/exports/<source>/<session-id>.md。
@@ -18,18 +18,20 @@ import { listPiSessions, parsePiSession } from './lib/pi-reader.mjs'
 import { listOpencodeSessions, readOpencodeSession } from './lib/opencode-reader.mjs'
 import { listCodexSessions, parseCodexSession } from './lib/codex-reader.mjs'
 import { listClaudeSessions, parseClaudeSession } from './lib/claude-reader.mjs'
+import { defaultWorkbuddyRoot, listWorkbuddySessions, parseWorkbuddySession } from './lib/workbuddy-reader.mjs'
 
 const USAGE = `用法:
   node export.mjs [options]
 
 options:
-  --source <pi|opencode|codex|claude-code|all>  导出来源（默认 all）
+  --source <pi|opencode|codex|claude-code|workbuddy|all>  导出来源（默认 all）
   --project <substr>          只导出 cwd 包含该子串的会话
   --limit <n>                 最多导出 n 个会话（按创建时间从新到旧）
   --since <iso|ms>            只导出创建时间不早于该值的会话
   --out <dir>                 输出目录（默认 $DSH_HOME/exports）
   --no-reasoning              不导出推理块
   --no-tools                  不导出工具调用
+  --workbuddy-root <dir>      WorkBuddy 数据根目录（默认 ~/.workbuddy）
 `
 
 /** ISO 时间格式化（本地时区）。 */
@@ -75,7 +77,7 @@ function renderSession(source, header, messages, options) {
     `- 消息数: ${messages.length}`,
     '',
     '> 本文件由 import-pi-opencode 的 export.mjs 从原始会话数据转写。',
-    '> 同一份历史也已导入 dsh（会话 id 前缀 pi- / oc-），可在 dsh 会话列表中恢复继续对话。',
+    '> 同一份历史也已导入 dsh（会话 id 前缀 pi- / oc- / codex- / claude- / wb-），可在 dsh 会话列表中恢复继续对话。',
     '',
   ]
   for (const message of messages) {
@@ -114,6 +116,11 @@ function exportSource(source, options) {
       if (parsed.header.id === undefined) continue
       candidates.push({ header: parsed.header, messages: parsed.messages })
     }
+  } else if (source === 'workbuddy') {
+    for (const entry of listWorkbuddySessions(options.workbuddyRoot)) {
+      const parsed = parseWorkbuddySession(entry.file)
+      candidates.push({ header: parsed.header, messages: parsed.messages })
+    }
   } else {
     throw new Error(`未知来源: ${source}`)
   }
@@ -132,7 +139,7 @@ function exportSource(source, options) {
   const dir = join(options.out, source)
   mkdirSync(dir, { recursive: true })
   for (const candidate of selected) {
-    const prefix = { pi: 'pi', opencode: 'oc', codex: 'codex', 'claude-code': 'claude' }[source]
+    const prefix = { pi: 'pi', opencode: 'oc', codex: 'codex', 'claude-code': 'claude', workbuddy: 'wb' }[source]
     const id = `${prefix}-${candidate.header.id}`
     const path = join(dir, `${id}.md`)
     writeFileSync(path, renderSession(source, candidate.header, candidate.messages, options))
@@ -159,10 +166,11 @@ async function main() {
     opencodeDb: flags['opencode-db'] ?? join(process.env.HOME ?? '', '.local', 'share', 'opencode', 'opencode.db'),
     codexRoot: flags['codex-root'] ?? join(process.env.HOME ?? '', '.codex', 'sessions'),
     claudeRoot: flags['claude-root'] ?? join(process.env.HOME ?? '', '.claude', 'projects'),
+    workbuddyRoot: flags['workbuddy-root'] ?? defaultWorkbuddyRoot(),
   }
   if (options.limit !== undefined && !Number.isInteger(options.limit)) throw new Error('--limit 必须是整数')
 
-  const sources = options.source === 'all' ? ['pi', 'opencode', 'codex', 'claude-code'] : [options.source]
+  const sources = options.source === 'all' ? ['pi', 'opencode', 'codex', 'claude-code', 'workbuddy'] : [options.source]
   let total = 0
   for (const source of sources) {
     const exported = exportSource(source, options)

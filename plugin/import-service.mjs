@@ -14,6 +14,7 @@ import { listPiSessions, parsePiSession } from '../lib/pi-reader.mjs'
 import { listOpencodeSessions, readOpencodeSession } from '../lib/opencode-reader.mjs'
 import { listCodexConversations } from '../lib/codex-reader.mjs'
 import { listClaudeSessions, parseClaudeSession } from '../lib/claude-reader.mjs'
+import { listWorkbuddySessions, parseWorkbuddySession } from '../lib/workbuddy-reader.mjs'
 import { applySkillPlan, collectAgents, planSkillWrites } from '../lib/agents.mjs'
 
 /** 读取 pi 会话文件头（id/cwd/createdAt），不解析整文件。 */
@@ -142,6 +143,11 @@ export async function importSessions(persistence, source, options) {
       if (parsed.header.id === undefined) continue
       candidates.push({ file: entry.file, parsed, id: `claude-${parsed.header.id}`, cwd: entry.cwd, createdAt: parsed.header.createdAt })
     }
+  } else if (source === 'workbuddy') {
+    // One WorkBuddy transcript file = one conversation (session uuid is stable).
+    for (const entry of listWorkbuddySessions(options.workbuddyRoot)) {
+      candidates.push({ file: entry.file, id: `wb-${entry.id}`, cwd: entry.cwd, createdAt: entry.createdAt })
+    }
   } else {
     throw new Error(`未知来源: ${source}`)
   }
@@ -185,6 +191,10 @@ export async function importSessions(persistence, source, options) {
     } else if (source === 'opencode') {
       messages = readOpencodeSession(options.opencodeDb, candidate.row.id)
       sourceTitle = candidate.row.title
+    } else if (source === 'workbuddy') {
+      const parsed = parseWorkbuddySession(candidate.file)
+      messages = parsed.messages
+      sourceTitle = parsed.header.title
     } else {
       messages = candidate.parsed.messages
       sourceTitle = candidate.parsed.header.title
@@ -237,7 +247,7 @@ export async function importSessions(persistence, source, options) {
   if (imported > 0 && persistence.ctx !== undefined) {
     const attached = await attachSessionsToWorkspaces(
       persistence.ctx,
-      selected.filter(candidate => candidate.id !== undefined && /^(pi|oc|codex|claude)-/u.test(candidate.id)),
+      selected.filter(candidate => candidate.id !== undefined && /^(pi|oc|codex|claude|wb)-/u.test(candidate.id)),
     )
     lines.push(...attached)
   }

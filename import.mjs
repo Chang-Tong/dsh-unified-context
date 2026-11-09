@@ -15,7 +15,7 @@
  * 导入完成后需要重启 `dsh web`，GUI 会话列表才会刷新。
  */
 
-import { existsSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { agentsHome, dshHome, log, parseArgs, parseSince, truncate } from './lib/util.mjs'
@@ -27,15 +27,23 @@ import { defaultOpencodeDb, listOpencodeSessions, readOpencodeSession } from './
 import { defaultCodexRoot, listCodexConversations } from './lib/codex-reader.mjs'
 import { defaultClaudeRoot, listClaudeSessions, parseClaudeSession } from './lib/claude-reader.mjs'
 import { applySkillPlan, collectAgents, fileSize, planSkillWrites } from './lib/agents.mjs'
+import { applyContextPlan, planContext, renderContextPlan, resolveContextLayout } from './lib/context.mjs'
+import { planAutomations, renderAutomationPlan } from './lib/automations-plan.mjs'
+import { defaultWorkbuddyRoot, listWorkbuddySessions, parseWorkbuddySession } from './lib/workbuddy-reader.mjs'
+import { defaultWorkbuddyAutomationsDb } from './lib/workbuddy-automations.mjs'
 
 const USAGE = `用法:
   node import.mjs <command> [options]
 
 commands:
-  sessions pi|opencode|codex|claude-code   导入会话历史（聊天记录）
+  sessions pi|opencode|codex|claude-code|workbuddy
+                         导入会话历史（聊天记录）
   agents                 把 pi / opencode 的 agent 与模式提示词导入为 DSH skills
-  projects               扫描项目级 agent / skill / 指令文件（只报告，不写入）
-  all                    上面全部
+  context                对齐各 Harness 的上下文（AGENTS.md/CODEBUDDY.md + skills），
+                         用符号链接共享一份，不复制（--apply 才写入）
+  automations            把 Codex / WorkBuddy 的自动化任务规划成 dsh 定时任务（只出计划；
+                         --apply 需在 dsh GUI 里运行 /import-automations）
+  all                    上面全部（automations 只出计划）
 
 options:
   --apply                真正写入（默认 --dry-run 只预览）
@@ -53,6 +61,14 @@ options:
   --skills-root <dir>    技能存储根目录（默认 $DSH_AGENTS_HOME/skills）
   --pi-root <dir>        pi 会话根目录（默认 ~/.pi/agent/sessions）
   --opencode-db <file>   opencode 数据库路径（默认 ~/.local/share/opencode/opencode.db）
+  --workbuddy-root <dir> WorkBuddy 数据根目录（默认 ~/.workbuddy）
+  --workbuddy-automations-db <file>
+                         WorkBuddy 自动化数据库（默认 ~/Library/Application Support/WorkBuddy/automations/automations.db）
+  --codex-home <dir>     Codex 配置根目录（默认 ~/.codex；automations 从 <dir>/automations 读取）
+  --project-dir <dir>    context 命令的项目目录（默认当前目录）
+  --push                 context 同时把 hub 技能反向链接到各 Harness 技能根（默认只汇入 hub，不反向推送）
+  --timezone <zone>      automations 的时区（默认 Asia/Shanghai）
+  --only <ids>           automations 只处理逗号分隔的自动化 id
 `
 
 /** Compact one-line rendering of an event for dry-run previews. */
@@ -172,8 +188,12 @@ function importSessions(source, options) {
         createdAt: parsed.header.createdAt,
       })
     }
+  } else if (source === 'workbuddy') {
+    for (const entry of listWorkbuddySessions(options.workbuddyRoot)) {
+      candidates.push({ file: entry.file, id: `wb-${entry.id}`, cwd: entry.cwd, createdAt: entry.createdAt })
+    }
   } else {
-    throw new Error(`未知来源: ${source}（可选 pi / opencode / codex / claude-code）`)
+    throw new Error(`未知来源: ${source}（可选 pi / opencode / codex / claude-code / workbuddy）`)
   }
 
   let selected = candidates
@@ -209,6 +229,10 @@ function importSessions(source, options) {
       } else if (source === 'opencode') {
         messages = readOpencodeSession(options.opencodeDb, candidate.row.id)
         sourceTitle = candidate.row.title
+      } else if (source === 'workbuddy') {
+        const parsed = parseWorkbuddySession(candidate.file)
+        messages = parsed.messages
+        sourceTitle = parsed.header.title
       } else {
         messages = candidate.parsed.messages
         sourceTitle = candidate.parsed.header.title
@@ -279,30 +303,61 @@ function importAgents(options) {
   return plans
 }
 
-/** Scan project-level agent/skill/instruction files (report only). */
-function scanProjects(options) {
-  const seen = new Map()
-  const consider = (cwd) => {
-    if (typeof cwd === 'string' && cwd.length > 0 && existsSync(cwd)) seen.set(cwd, true)
+/** Imported Codex session ids visible on disk (heartbeat automations can target them). */
+function importedCodexSessionIds(sessionsRoot) {
+  const ids = []
+  let projects
+  try {
+    projects = readdirSync(sessionsRoot, { withFileTypes: true })
+  } catch {
+    return ids
   }
-  for (const file of listPiSessions(options.piRoot)) {
-    const header = piSessionHeader(file)
-    consider(header.cwd)
+  for (const project of projects) {
+    if (!project.isDirectory()) continue
+    let entries
+    try {
+      entries = readdirSync(join(sessionsRoot, project.name), { withFileTypes: true })
+    } catch {
+      continue
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory() || !entry.name.startsWith('session-codex-')) continue
+      ids.push({ id: entry.name.slice('session-'.length) })
+    }
   }
-  for (const row of listOpencodeSessions(options.opencodeDb)) consider(row.directory)
+  return ids
+}
 
-  log(`[projects] 扫描 ${seen.size} 个项目目录的项目级指令/agent/skill:`)
-  for (const project of [...seen.keys()].sort()) {
-    const findings = []
-    for (const sub of ['.opencode/agent', '.opencode/skill', '.pi/agent', '.agents/skills', '.dsh/skills']) {
-      if (existsSync(join(project, sub))) findings.push(sub)
-    }
-    for (const name of ['AGENTS.md', 'CLAUDE.md']) {
-      if (existsSync(join(project, name))) findings.push(name)
-    }
-    log(`  ${project}${findings.length === 0 ? '  （无）' : `  ->  ${findings.join(', ')}`}`)
+/** Context parity: plan/apply shared instruction + skill links. */
+function runContext(options) {
+  const layout = resolveContextLayout({ projectDir: options.projectDir, pushSkills: options.pushSkills === true })
+  const plan = planContext(layout)
+  for (const line of renderContextPlan(plan)) log(line)
+  if (!options.apply) {
+    log('[context] dry-run：未写入任何东西（加 --apply 创建链接）')
+    return
   }
-  log('[projects] 说明: AGENTS.md/CLAUDE.md 由 DSH 会话自动读取；.agents/skills 与 .dsh/skills 已是 DSH 技能根，无需导入。')
+  const result = applyContextPlan(plan)
+  log(`[context] 结果: 应用 ${result.applied.length}/${plan.actions.length} 项，失败 ${result.failed.length}，冲突 ${plan.conflicts.length}`)
+  for (const failure of result.failed) log(`  [失败] ${failure.path}: ${failure.error}`)
+}
+
+/** Automations: print the migration plan (creating tasks needs the running dsh host). */
+function runAutomations(options) {
+  const plan = planAutomations(
+    {
+      codexHome: options.codexHome,
+      workbuddyRoot: options.workbuddyRoot,
+      workbuddyAutomationsDb: options.workbuddyAutomationsDb,
+      timeZone: options.timeZone,
+      only: options.only === undefined ? [] : String(options.only).split(',').map(item => item.trim()).filter(Boolean),
+      activate: false,
+    },
+    importedCodexSessionIds(options.sessionsRoot),
+  )
+  for (const line of renderAutomationPlan(plan)) log(line)
+  log('[automations] 说明: 迁移会创建 dsh 定时任务（默认暂停）；创建需要运行中的 dsh，请在 GUI 输入 /import-automations 应用。CLI 只做计划，不写任务。')
+  if (options.apply) log('[automations] --apply 在 CLI 中不可用：请在 dsh GUI 运行 /import-automations。')
 }
 
 async function main() {
@@ -334,7 +389,14 @@ async function main() {
     opencodeDb: flags['opencode-db'] ?? defaultOpencodeDb(),
     opencodeConfig: flags['opencode-config'] ?? join(process.env.HOME ?? '', '.config', 'opencode'),
     codexRoot: flags['codex-root'] ?? defaultCodexRoot(),
+    codexHome: flags['codex-home'] ?? join(process.env.HOME ?? '', '.codex'),
     claudeRoot: flags['claude-root'] ?? defaultClaudeRoot(),
+    workbuddyRoot: flags['workbuddy-root'] ?? defaultWorkbuddyRoot(),
+    workbuddyAutomationsDb: flags['workbuddy-automations-db'] ?? defaultWorkbuddyAutomationsDb(),
+    projectDir: flags['project-dir'],
+    pushSkills: flags.push === true,
+    timeZone: flags.timezone ?? 'Asia/Shanghai',
+    only: flags.only,
   }
   if (options.limit !== undefined && !Number.isInteger(options.limit)) throw new Error('--limit 必须是整数')
   if (options.truncate !== undefined && (!Number.isInteger(options.truncate) || options.truncate < 0)) throw new Error('--truncate 必须是非负整数')
@@ -348,17 +410,23 @@ async function main() {
 
   if (command === 'sessions') {
     const source = positionals[1]
-    if (!['pi', 'opencode', 'codex', 'claude-code'].includes(source)) throw new Error('sessions 需要 pi / opencode / codex / claude-code 参数')
+    if (!['pi', 'opencode', 'codex', 'claude-code', 'workbuddy'].includes(source)) {
+      throw new Error('sessions 需要 pi / opencode / codex / claude-code / workbuddy 参数')
+    }
     importSessions(source, options)
   } else if (command === 'agents') {
     importAgents(options)
-  } else if (command === 'projects') {
-    scanProjects(options)
+  } else if (command === 'context') {
+    runContext(options)
+  } else if (command === 'automations') {
+    runAutomations(options)
   } else if (command === 'all') {
-    for (const source of ['pi', 'opencode', 'codex', 'claude-code']) {
+    for (const source of ['pi', 'opencode', 'codex', 'claude-code', 'workbuddy']) {
       importSessions(source, options)
     }
     importAgents(options)
+    runContext(options)
+    runAutomations(options)
   } else {
     throw new Error(`未知命令: ${command}\n${USAGE}`)
   }

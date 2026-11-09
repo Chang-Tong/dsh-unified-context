@@ -20,6 +20,7 @@ import { listPiSessions } from '../lib/pi-reader.mjs'
 import { listOpencodeSessions } from '../lib/opencode-reader.mjs'
 import { listCodexSessions, parseCodexSession } from '../lib/codex-reader.mjs'
 import { listClaudeSessions, parseClaudeSession } from '../lib/claude-reader.mjs'
+import { listWorkbuddySessions } from '../lib/workbuddy-reader.mjs'
 import { importAgents, importSessions } from './import-service.mjs'
 
 const STATE_FILE = 'import-pi-opencode-state.json'
@@ -107,7 +108,12 @@ export async function findPending(persistence, config) {
     const id = `claude-${parsed.header.id}`
     if (!ids.has(id)) claude.push({ id, cwd: entry.cwd })
   }
-  return { pi, opencode, codex, claude }
+  const workbuddy = []
+  for (const entry of listWorkbuddySessions(config.workbuddyRoot)) {
+    const id = `wb-${entry.id}`
+    if (!ids.has(id)) workbuddy.push({ id, cwd: entry.cwd })
+  }
+  return { pi, opencode, codex, claude, workbuddy }
 }
 
 /** 收集导入执行的结果摘要（供 notice 使用）。 */
@@ -134,19 +140,19 @@ export async function maybeOfferMigration(ctx, agent, config) {
   if (sessionsState === 'declined' || sessionsState === 'imported') return
 
   const pending = await findPending(ctx.sessionPersistence, config)
-  const total = pending.pi.length + pending.opencode.length + pending.codex.length + pending.claude.length
+  const total = pending.pi.length + pending.opencode.length + pending.codex.length + pending.claude.length + pending.workbuddy.length
   if (total === 0) return
 
   const here = source => pending[source].filter(item => sameProject(item.cwd, cwd)).length
-  const counts = { pi: here('pi'), opencode: here('opencode'), codex: here('codex'), claude: here('claude') }
+  const counts = { pi: here('pi'), opencode: here('opencode'), codex: here('codex'), claude: here('claude'), workbuddy: here('workbuddy') }
 
   const questions = [{
     id: 'migrate-sessions',
     header: 'Migrate history',
-    question: `Found ${total} unimported pi/opencode/codex/claude-code sessions (this project: pi ${counts.pi}, opencode ${counts.opencode}, codex ${counts.codex}, claude-code ${counts.claude}). Import them into dsh?`,
+    question: `Found ${total} unimported pi/opencode/codex/claude-code/WorkBuddy sessions (this project: pi ${counts.pi}, opencode ${counts.opencode}, codex ${counts.codex}, claude-code ${counts.claude}, WorkBuddy ${counts.workbuddy}). Import them into dsh?`,
     detail: 'Imported sessions appear in the session list and can be resumed; ids are stable and re-imports are skipped automatically.',
     options: [
-      { label: 'Import all', description: 'Import every pi/opencode session (including other projects)' },
+      { label: 'Import all', description: 'Import every source session (including other projects)' },
       { label: 'Import this project only', description: `Only import sessions related to ${cwd}` },
       { label: "Don't import", description: 'Skip migration; this project will not be asked again' },
     ],
@@ -182,7 +188,7 @@ export async function maybeOfferMigration(ctx, agent, config) {
       options.cwdFilter = candidate => sameProject(candidate, cwd)
     }
     const lines = []
-    for (const source of ['pi', 'opencode', 'codex', 'claude-code']) {
+    for (const source of ['pi', 'opencode', 'codex', 'claude-code', 'workbuddy']) {
       lines.push(...await importSessions(ctx.sessionPersistence, source, options))
     }
     for (const line of lines) ctx.logger.info(`[import-pi-opencode] ${line}`)

@@ -122,7 +122,7 @@ export async function listImportedSessions(ctx) {
   const imported = []
   for (const snapshot of snapshots) {
     const header = snapshot.header
-    if (/^(pi|oc|codex|claude)-/u.test(header.id)) {
+    if (/^(pi|oc|codex|claude|wb)-/u.test(header.id)) {
       imported.push({ id: header.id, cwd: header.cwd })
     }
   }
