@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * WorkBuddy automations: SQLite rows → the shared automation shape, and the
  * shared planner maps them to dsh scheduled tasks.
@@ -5,7 +6,9 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { DatabaseSync } from 'node:sqlite'
+// Loaded at runtime from the test body: a static `node:sqlite` import is a
+// built-in that the jsdom/client transform refuses to bundle in CI.
+const { DatabaseSync } = process.getBuiltinModule('node:sqlite') as typeof import('node:sqlite')
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { collectWorkbuddyAutomations } from '../lib/workbuddy-automations.mjs'
