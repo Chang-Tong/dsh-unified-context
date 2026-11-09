@@ -13,6 +13,17 @@ dsh-unified-context — released under the MIT License.
 
 **DSH Unified Context** (`dsh-unified-context`, 统一上下文) migrates **pi**, **opencode**, **codex**, **claude-code**, and **WorkBuddy (Tencent)** into [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (dsh): sessions and chat history, the full context the model actually saw (`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`, skills, project and per-agent memory, project files), and scheduled automations. Context is **shared through symlinks — one real copy, every harness reading it — never copied per harness.** Sessions appear in the session list and resume with the full history; custom agents and mode prompts become discoverable dsh skills; a one-click **Sync** button in the composer runs the whole migration.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/pi.svg" width="44" height="44" alt="pi" title="pi">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/opencode.svg" width="44" height="44" alt="opencode" title="opencode">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/codex.svg" width="44" height="44" alt="OpenAI Codex" title="OpenAI Codex">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/claude-code.svg" width="44" height="44" alt="Claude Code" title="Claude Code">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/workbuddy.png" width="44" height="44" alt="WorkBuddy" title="WorkBuddy">&nbsp;&nbsp;
+  <b>→</b>&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/dsh.png" width="44" height="44" alt="DeepSeek Harness" title="DeepSeek Harness">
+</p>
+<p align="center"><sub>pi · opencode · OpenAI Codex · Claude Code · WorkBuddy → DeepSeek Harness</sub></p>
+
 | Resource | Link |
 | --- | --- |
 | 中文文档 | [README.zh.md](README.zh.md) |
@@ -23,6 +34,7 @@ dsh-unified-context — released under the MIT License.
 
 - [Features](#features)
 - [Why unified context](#why-unified-context)
+- [Supported harnesses](#supported-harnesses)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -48,6 +60,17 @@ dsh-unified-context — released under the MIT License.
 - **Workspace placement.** Imported sessions attach to a workspace matching their original `cwd` (created on demand); `/attach-workspaces` retro-fits existing imports.
 - **Idempotent.** Stable ids (`pi-<uuid>` / `oc-<id>` / `codex-<id>` / `claude-<id>`); re-imports skip what already exists.
 - **Zero runtime dependencies.** Node built-ins (`node:zlib` zstd, `node:sqlite`) plus dsh platform modules.
+
+## Supported harnesses
+
+| Harness | What the migration carries |
+| --- | --- |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/pi.svg" width="22" height="22" alt="pi"> **pi** | sessions, agents / mode prompts → dsh skills, instructions & skills context |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/opencode.svg" width="22" height="22" alt="opencode"> **opencode** | sessions (SQLite), agents → dsh skills, instructions & skills context |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/codex.svg" width="22" height="22" alt="OpenAI Codex"> **OpenAI Codex** | sessions, `AGENTS.md` context, automations |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/claude-code.svg" width="22" height="22" alt="Claude Code"> **Claude Code** | sessions, `CLAUDE.md` context, project & per-agent memory |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/workbuddy.png" width="22" height="22" alt="WorkBuddy"> **WorkBuddy (Tencent)** | sessions with real tool results, `CODEBUDDY.md` + skills, project memory, automations |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/dsh.png" width="22" height="22" alt="DeepSeek Harness"> **DeepSeek Harness** | the target: resumable sessions, one shared context, scheduled tasks |
 
 ## Why unified context
 

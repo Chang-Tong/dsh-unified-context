@@ -13,6 +13,17 @@ dsh-unified-context — 以 MIT License 发布。
 
 **DSH Unified Context**（`dsh-unified-context`，统一上下文）把 **pi**、**opencode**、**codex**、**claude-code** 与 **WorkBuddy（腾讯）** 迁移进 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（dsh）：会话与聊天记录、模型真正看到的完整上下文（`AGENTS.md` / `CLAUDE.md` / `CODEBUDDY.md`、skills、项目与 Agent 长期记忆、项目配置），以及定时自动化任务。上下文用**符号链接共享同一份真文件**——不是每个 Harness 各复制一份。导入的会话出现在会话列表、可携带完整历史继续对话；自定义 agent 与模式提示词变成可发现的 dsh skills；composer 里的一键 **同步** 按钮即可完成全部迁移。
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/pi.svg" width="44" height="44" alt="pi" title="pi">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/opencode.svg" width="44" height="44" alt="opencode" title="opencode">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/codex.svg" width="44" height="44" alt="OpenAI Codex" title="OpenAI Codex">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/claude-code.svg" width="44" height="44" alt="Claude Code" title="Claude Code">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/workbuddy.png" width="44" height="44" alt="WorkBuddy" title="WorkBuddy">&nbsp;&nbsp;
+  <b>→</b>&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/dsh.png" width="44" height="44" alt="DeepSeek Harness" title="DeepSeek Harness">
+</p>
+<p align="center"><sub>pi · opencode · OpenAI Codex · Claude Code · WorkBuddy → DeepSeek Harness</sub></p>
+
 | 资源 | 链接 |
 | --- | --- |
 | English README | [README.md](README.md) |
@@ -23,6 +34,7 @@ dsh-unified-context — 以 MIT License 发布。
 
 - [特性](#特性)
 - [为什么需要统一上下文](#为什么需要统一上下文)
+- [支持的 Harness](#支持的-harness)
 - [截图](#截图)
 - [安装](#安装)
 - [使用](#使用)
@@ -48,6 +60,17 @@ dsh-unified-context — 以 MIT License 发布。
 - **按工作区分组。** 导入的会话自动挂到与原始 `cwd` 匹配的工作区（没有则创建）；`/attach-workspaces` 可补挂旧导入。
 - **幂等。** 会话 id 稳定（`pi-<uuid>` / `oc-<id>` / `codex-<id>` / `claude-<id>`），重复导入自动跳过。
 - **零运行时依赖。** 只用 Node 内置模块（`node:zlib` 的 zstd、`node:sqlite`）加 dsh 平台模块。
+
+## 支持的 Harness
+
+| Harness | 迁移内容 |
+| --- | --- |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/pi.svg" width="22" height="22" alt="pi"> **pi** | 会话、agent / 模式提示词 → dsh skills、指令与技能上下文 |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/opencode.svg" width="22" height="22" alt="opencode"> **opencode** | 会话（SQLite）、agent → dsh skills、指令与技能上下文 |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/codex.svg" width="22" height="22" alt="OpenAI Codex"> **OpenAI Codex** | 会话、`AGENTS.md` 上下文、自动化 |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/claude-code.svg" width="22" height="22" alt="Claude Code"> **Claude Code** | 会话、`CLAUDE.md` 上下文、项目与 Agent 记忆 |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/workbuddy.png" width="22" height="22" alt="WorkBuddy"> **WorkBuddy（腾讯）** | 含真实工具结果的会话、`CODEBUDDY.md` 与技能、项目记忆、自动化 |
+| <img src="https://raw.githubusercontent.com/Chang-Tong/dsh-unified-context/main/assets/logos/dsh.png" width="22" height="22" alt="DeepSeek Harness"> **DeepSeek Harness** | 目标端：可继续的会话、一份共享上下文、定时任务 |
 
 ## 为什么需要统一上下文
 

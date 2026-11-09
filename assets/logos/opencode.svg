@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="opencode">
+  <rect width="96" height="96" rx="20" fill="#131010"/>
+  <g transform="translate(20 20) scale(2.3333333)">
+    <path fill="#ffffff" d="M22 24H2V0h20zM17 4.8H7v14.4h10z"/>
+  </g>
+</svg>
