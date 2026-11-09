@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Renamed
 
-- The project is now **DSH Unified Context** (`dsh-unified-context`, 统一上下文). The GitHub repository (`Chang-Tong/dsh-unified-context`), npm package name, cordis plugin id, docs, badges and install commands use the new name; slash commands are unchanged. The previous `dsh-import-agents` package (0.3.1) stays installable, and the migration-prompt state file is read from the old name once and then written as `$DSH_HOME/unified-context-state.json`.
+- The project is now **DSH Unified Context** (`dsh-unified-context`, 统一上下文). The GitHub repository (`Chang-Tong/dsh-unified-context`), npm package name, cordis plugin id, docs, badges and install commands use the new name; slash commands are unchanged. The npm package `dsh-unified-context@0.4.0` is published; the previous `dsh-import-agents` package (0.3.1) stays installable, and the migration-prompt state file is read from the old name once and then written as `$DSH_HOME/unified-context-state.json`.
 
 ### Added
 

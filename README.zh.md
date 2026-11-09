@@ -6,6 +6,7 @@ dsh-unified-context — 以 MIT License 发布。
 [English](README.md) · **简体中文**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/dsh-unified-context)](https://www.npmjs.com/package/dsh-unified-context)
 [![CI](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml/badge.svg)](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](https://nodejs.org/)
 [![DeepSeek Honeys](https://dshoneys.github.io/awesome-dshoneys/assets/badges/listed.svg)](https://dshoneys.github.io/awesome-dshoneys/)
@@ -15,7 +16,7 @@ dsh-unified-context — 以 MIT License 发布。
 | 资源 | 链接 |
 | --- | --- |
 | English README | [README.md](README.md) |
-| npm 包 | `dsh-unified-context`（待发布；旧的 `dsh-import-agents` 仍为 0.3.1） |
+| npm 包 | [dsh-unified-context](https://www.npmjs.com/package/dsh-unified-context) |
 | 源码 | [github.com/Chang-Tong/dsh-unified-context](https://github.com/Chang-Tong/dsh-unified-context) |
 
 ## 目录
@@ -71,12 +72,12 @@ dsh-unified-context — 以 MIT License 发布。
 
 ## 安装
 
-插件声明了 `dsh.bundle`，官方安装命令会自动把它激活到 profile 里。npm 包名正在迁移为 **`dsh-unified-context`**；在该名字发布之前，请从 **GitHub** 或本地 checkout 安装（旧的 `dsh-import-agents` 包仍可用，版本 0.3.1）。
+插件已发布到 **npm**：`dsh-unified-context`，并声明了 `dsh.bundle`——官方一键安装命令会自动把它激活到 profile 里，无需手动配置。旧的 `dsh-import-agents` 包（0.3.1）仍可供旧 checkout 使用。
 
 ### 一键安装（推荐）
 
 ```sh
-dsh plugin --profile web add github:Chang-Tong/dsh-unified-context
+dsh plugin --profile web add dsh-unified-context
 ```
 
 `dsh plugin add` 会安装包**并自动追加到 profile 的 bundle 列表**（层直接激活，无需手动配置）。之后重启 `dsh web` 并刷新页面即可。
@@ -89,8 +90,8 @@ dsh plugin --profile web add github:Chang-Tong/dsh-unified-context
 
 | 来源 | 命令 |
 | --- | --- |
-| npm（最新版，发布后） | `dsh plugin --profile web add dsh-unified-context` |
-| npm（指定版本/范围，发布后） | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
+| npm（最新版） | `dsh plugin --profile web add dsh-unified-context` |
+| npm（指定版本/范围） | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
 | GitHub（短格式） | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context` |
 | GitHub（锁定 commit） | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context#<sha>` |
 | Git 完整地址 | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.4.0` |

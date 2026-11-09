@@ -6,6 +6,7 @@ dsh-unified-context — released under the MIT License.
 **English** · [简体中文](README.zh.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/dsh-unified-context)](https://www.npmjs.com/package/dsh-unified-context)
 [![CI](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml/badge.svg)](https://github.com/Chang-Tong/dsh-unified-context/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D22.19-339933)](https://nodejs.org/)
 [![DeepSeek Honeys](https://dshoneys.github.io/awesome-dshoneys/assets/badges/listed.svg)](https://dshoneys.github.io/awesome-dshoneys/)
@@ -15,7 +16,7 @@ dsh-unified-context — released under the MIT License.
 | Resource | Link |
 | --- | --- |
 | 中文文档 | [README.zh.md](README.zh.md) |
-| npm package | `dsh-unified-context` (publishing pending; the previous `dsh-import-agents` stays at 0.3.1) |
+| npm package | [dsh-unified-context](https://www.npmjs.com/package/dsh-unified-context) |
 | Source code | [github.com/Chang-Tong/dsh-unified-context](https://github.com/Chang-Tong/dsh-unified-context) |
 
 ## Table of Contents
@@ -71,12 +72,12 @@ Tool calls survive the import as real trajectory entries — the **Trajectory** 
 
 ## Installation
 
-The plugin declares a `dsh.bundle`, so the official installer activates it automatically. The npm package is being renamed to **`dsh-unified-context`**; until that name is published, install from **GitHub** or a local checkout (the previous `dsh-import-agents` package remains available at 0.3.1).
+The plugin is published on **npm** as `dsh-unified-context` and declares a `dsh.bundle`, so the official one-command installer activates it automatically. The previous `dsh-import-agents` package (0.3.1) remains available for old checkouts.
 
 ### One command (recommended)
 
 ```sh
-dsh plugin --profile web add github:Chang-Tong/dsh-unified-context
+dsh plugin --profile web add dsh-unified-context
 ```
 
 `dsh plugin add` installs the package **and** appends it to the profile's bundle list (the layer is active — no manual config). Then restart `dsh web` and refresh the page.
@@ -89,8 +90,8 @@ The `<spec>` argument is a standard pnpm package spec:
 
 | Source | Command |
 | --- | --- |
-| npm (latest, after publish) | `dsh plugin --profile web add dsh-unified-context` |
-| npm (exact / range, after publish) | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
+| npm (latest) | `dsh plugin --profile web add dsh-unified-context` |
+| npm (exact / range) | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
 | GitHub (short) | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context` |
 | GitHub (pinned commit) | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context#<sha>` |
 | Git URL | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.2.4` |

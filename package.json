@@ -62,7 +62,7 @@
   "homepage": "https://github.com/Chang-Tong/dsh-unified-context",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Chang-Tong/dsh-unified-context.git"
+    "url": "git+https://github.com/Chang-Tong/dsh-unified-context.git"
   },
   "bugs": {
     "url": "https://github.com/Chang-Tong/dsh-unified-context/issues"
