@@ -27,6 +27,7 @@ dsh-unified-context — released under the MIT License.
 - [Usage](#usage)
 - [How it works](#how-it-works)
 - [Context parity](#context-parity)
+- [Long-term memory](#long-term-memory)
 - [Automations](#automations)
 - [Configuration](#configuration)
 - [Testing](#testing)
@@ -38,6 +39,7 @@ dsh-unified-context — released under the MIT License.
 - **Five sources, one command.** Import sessions from pi (JSONL), opencode (SQLite), codex (JSONL), claude-code (JSONL), and WorkBuddy (JSONL) — as real, resumable dsh sessions.
 - **Truly resumable.** Browse the full original history (text, reasoning, tool calls — and real tool results where the source recorded them) and continue the conversation; the model gets the complete context.
 - **Context parity, not copies.** `/link-context` makes every harness read one shared `AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md` and one shared skill hub through symlinks: one real copy, no per-harness duplication, divergent copies reported instead of overwritten.
+- **Long-term memory, per project and per agent.** Project memory (Claude Code / WorkBuddy) converges on `<project>/.agents/memory/`; agent memory (Codex layout) converges on `~/.agents/agent-memory/<agent>/`. Default policy is **authority** (one harness wins, others link), with an opt-in **merge** index that references notes in place. A small generated block in the project `AGENTS.md` points dsh at the memory notes so they are read on demand.
 - **Automations migrate too.** Codex automations and WorkBuddy automations become dsh scheduled tasks (RRULE translated, imported paused by default so the source can be switched off first).
 - **Agents become skills.** pi agents / mode prompts and opencode agents are converted into dsh skill bundles under `$DSH_AGENTS_HOME/skills`, with provenance recorded in frontmatter (`metadata.source` / `metadata.kind`).
 - **One-click Sync button.** A small control in the composer tool row runs `/import-all` and shows the result inline — sessions, skills, context links, and paused automations.
@@ -91,7 +93,7 @@ The `<spec>` argument is a standard pnpm package spec:
 | Source | Command |
 | --- | --- |
 | npm (latest) | `dsh plugin --profile web add dsh-unified-context` |
-| npm (exact / range) | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
+| npm (exact / range) | `dsh plugin --profile web add dsh-unified-context@0.5.0` · `@^0.5` |
 | GitHub (short) | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context` |
 | GitHub (pinned commit) | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context#<sha>` |
 | Git URL | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.2.4` |
@@ -139,7 +141,7 @@ Everything is **idempotent** — run it as often as you like; already-imported s
 | `/import-claude-code [options]` | Import claude-code sessions |
 | `/import-workbuddy [options]` | Import WorkBuddy sessions |
 | `/import-agents` | Convert pi/opencode agents & prompts into dsh skills |
-| `/link-context [--project DIR] [--dry-run] [--push]` | Share one `AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md` + skill hub across harnesses with symlinks (never copies) |
+| `/link-context [--project DIR] [--dry-run] [--push] [--memory=authority\|merge\|off] [--authority=harness]` | Share one `AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md`, skill hub and long-term memory across harnesses with symlinks (never copies) |
 | `/import-automations [--only id] [--activate] [--dry-run]` | Migrate Codex + WorkBuddy automations into dsh scheduled tasks (paused by default) |
 | `/import-all [options]` | All of the above (5 session sources + agents + context links + paused automations) |
 | `/attach-workspaces` | Attach imported sessions to cwd-matched workspaces (retro-fit) |
@@ -157,6 +159,8 @@ node import.mjs agents --apply         # agents/prompts → skills only
 node import.mjs context --apply        # share AGENTS.md/CLAUDE.md/CODEBUDDY.md + skills
 node import.mjs context --push --apply # also link hub skills into every harness root
 node import.mjs context --project-dir ~/work/app --apply # project-level unification
+node import.mjs context --memory=merge --apply           # merged memory index (references, no copies)
+node import.mjs context --authority=workbuddy --apply    # pick which harness memory wins
 node import.mjs automations            # plan Codex/WorkBuddy automations (paused)
 node export.mjs                        # export sessions as Markdown for any agent to read
 ```
@@ -252,6 +256,25 @@ Rules the linker follows:
 
 Run it from the GUI with `/link-context` (dry-run with `--dry-run`), or from the CLI with `node import.mjs context [--apply] [--push] [--project-dir DIR]`.
 
+### Long-term memory
+
+Memory is a separate context layer with two scopes:
+
+| Scope | Native sources | Canonical store |
+| --- | --- | --- |
+| Project | Claude Code `~/.claude/projects/<encoded>/memory/`; WorkBuddy `<project>/.workbuddy/memory/` | `<project>/.agents/memory/` |
+| Agent | Codex `~/.codex/agent-memory/<agent>/`; Claude Code `~/.claude/agent-memory/<agent>/` (per agent — Codex's layout is the reference) | `~/.agents/agent-memory/<agent>/` |
+
+Policies (`--memory`):
+
+- **`authority` (default)** — one real directory wins (project: Claude, then WorkBuddy; agent: Codex, then Claude; override with `--authority=<harness>`); the other harness path becomes a symlink to it. Non-empty, divergent memory is reported as a conflict and left untouched instead of being merged.
+- **`merge`** — `<project>/.agents/memory/MEMORY.md` becomes a generated index that references every harness's memory notes **in place** (absolute paths, no copies); no directory is replaced. Agent memory remains authority.
+- **`off`** — do not touch memory.
+
+dsh has no independent memory reader, so a small marked block (`<!-- dsh-unified-context:memory:begin -->`) is generated in the project `AGENTS.md` (the file every harness reads) pointing at `.agents/memory/`; notes are read on demand instead of inflating every prompt. Content outside the marked block is never modified.
+
+Codex's `agent-memory` is **per agent, not per project**, so it converges at `~/.agents/agent-memory/<agent>/` instead of being folded into project memory. The whole memory layer is idempotent and opt-out (`--memory=off`).
+
 ## Automations
 
 Scheduled work migrates too:
@@ -290,7 +313,7 @@ The migration prompt only fires for brand-new **top-level** sessions (startup, n
 - `verify.mts` — mounts the **real** dsh JSONL backend + skill provider on staged output (`node --import tsx/esm ../dsh-unified-context/verify.mts <sessions-root> <skills-root>` from the dsh checkout) → expects `SESSIONS ALL PASS / SKILLS ALL PASS`.
 - `plugin/plugin-test.mts` — end-to-end: loads the plugin on a real cordis context, runs the commands and the session-start migration offer, asserts idempotency and state persistence.
 - `scripts/e2e-commands.mjs` — manual end-to-end for the new commands: mounts the plugin on a real cordis command runtime and invokes `/link-context` (apply in an isolated fake HOME, then a real-HOME dry run) and `/import-automations` (in-memory schedule: created paused, re-run created 0 skipped 11).
-- `tests/` — Vitest component tests for the Sync button (`sync-button.spec.tsx`, `sync-button-hide.spec.tsx`), reader tests (`opencode-reader.spec.ts`, `workbuddy-reader.spec.ts`), context-linker tests (`context.spec.ts`), automation tests (`automations.spec.ts`, `workbuddy-automations.spec.ts`), real-tool-result conversion (`convert-tool-result.spec.ts`), plus `attach-workspaces.spec.ts`.
+- `tests/` — Vitest component tests for the Sync button (`sync-button.spec.tsx`, `sync-button-hide.spec.tsx`), reader tests (`opencode-reader.spec.ts`, `workbuddy-reader.spec.ts`), context-linker tests (`context.spec.ts`), automation tests (`automations.spec.ts`, `workbuddy-automations.spec.ts`), memory tests (`memory.spec.ts`), real-tool-result conversion (`convert-tool-result.spec.ts`), plus `attach-workspaces.spec.ts`.
 - CI (GitHub Actions, `macos-latest`, Node 22): `pnpm install` → `pnpm run build` → `npx vitest run`.
 
 ```sh

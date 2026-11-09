@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-11-09
+
+### Added
+
+- **Long-term memory migration (project + agent scopes).** Memory is now a first-class context layer alongside instructions and skills:
+  - *Project memory*: Claude Code's `~/.claude/projects/<encoded>/memory/` and WorkBuddy's `<project>/.workbuddy/memory/` converge on `<project>/.agents/memory/`.
+  - *Agent memory*: Codex and Claude `agent-memory/<agent>/` converge on `~/.agents/agent-memory/<agent>/` (per agent; Codex's layout is the reference), instead of being folded into project memory.
+  - `--memory=authority|merge|off` (default **authority**): authority adopts one real directory and symlinks the rest, reporting divergent non-empty memories as conflicts instead of overwriting; merge generates `<project>/.agents/memory/MEMORY.md` as an index that references every harness note **in place** (absolute paths, no copies, no directory replacement); off leaves memory alone.
+  - `--authority=<harness>` selects the authority (project: Claude → WorkBuddy, agent: Codex → Claude by default).
+  - dsh has no independent memory reader, so a small marked block is generated in the project `AGENTS.md` pointing at `.agents/memory/`; notes are read on demand. Content outside the marker block is never touched.
+  - `/link-context` and `/import-all` run the memory layer; `node import.mjs context` exposes the same flags. Everything is idempotent.
+- `tests/memory.spec.ts` covers project discovery (Claude cwd matching, WorkBuddy dir), authority adoption/linking/conflicts, merge index generation, agent memory and off mode; 74 tests now pass.
+
 ## [0.4.0] - 2026-11-09
 
 ### Renamed

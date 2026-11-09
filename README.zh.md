@@ -27,6 +27,7 @@ dsh-unified-context — 以 MIT License 发布。
 - [使用](#使用)
 - [工作原理](#工作原理)
 - [上下文一致性](#上下文一致性)
+- [长期记忆](#长期记忆)
 - [自动化任务](#自动化任务)
 - [配置](#配置)
 - [测试](#测试)
@@ -38,6 +39,7 @@ dsh-unified-context — 以 MIT License 发布。
 - **五种来源，一条命令。** 导入 pi（JSONL）、opencode（SQLite）、codex（JSONL）、claude-code（JSONL）、WorkBuddy（JSONL）的会话——都是真实、可继续的 dsh 会话。
 - **真正可继续。** 可浏览原始完整历史（文本、推理、工具调用——源格式记录了结果时连真实工具结果一起保留），并接着上次继续对话；模型拿到完整上下文。
 - **上下文一致，不是复制。** `/link-context` 让所有 Harness 通过符号链接读同一份 `AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md` 和同一个 skill hub：只有一份真文件，不在每个 Harness 各存一份；有差异的副本会被报告出来而不是覆盖。
+- **长期记忆，按项目 + 按 Agent。** 项目记忆（Claude Code / WorkBuddy）统一到 `<项目>/.agents/memory/`；agent 记忆（Codex 布局）统一到 `~/.agents/agent-memory/<agent>/`。默认 **authority**（以某个 Harness 为准，其余变链接），可 opt-in **merge**（生成引用索引、不复制笔记）。项目 `AGENTS.md` 里会生成一小段索引指向记忆文件，dsh 按需读取，不把全部笔记塞进上下文。
 - **自动化任务也能迁移。** Codex automations 与 WorkBuddy automations 变成 dsh 定时任务（RRULE 翻译、默认以暂停状态导入，便于先停掉源任务）。
 - **Agents 变成 skills。** pi 的 agent / 模式提示词与 opencode 的 agent 转成 `$DSH_AGENTS_HOME/skills` 下的技能包，frontmatter 记录来源（`metadata.source` / `metadata.kind`）。
 - **一键同步按钮。** composer 工具行常驻一个小按钮，点击执行 `/import-all`，结果内联显示——会话、skills、上下文链接、暂停状态的自动化任务一次完成。
@@ -91,10 +93,10 @@ dsh plugin --profile web add dsh-unified-context
 | 来源 | 命令 |
 | --- | --- |
 | npm（最新版） | `dsh plugin --profile web add dsh-unified-context` |
-| npm（指定版本/范围） | `dsh plugin --profile web add dsh-unified-context@0.4.0` · `@^0.4` |
+| npm（指定版本/范围） | `dsh plugin --profile web add dsh-unified-context@0.5.0` · `@^0.5` |
 | GitHub（短格式） | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context` |
 | GitHub（锁定 commit） | `dsh plugin --profile web add github:Chang-Tong/dsh-unified-context#<sha>` |
-| Git 完整地址 | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.4.0` |
+| Git 完整地址 | `dsh plugin --profile web add git+https://github.com/Chang-Tong/dsh-unified-context.git` · `#v0.5.0` |
 | 本地 checkout | `cd <目录> && dsh plugin --profile web add .` 或 `file:/路径/dsh-unified-context` |
 | 开发链接 | `dsh plugin --profile web add link:/路径/dsh-unified-context` |
 | tarball | `dsh plugin --profile web add ./dsh-unified-context-0.2.4.tgz`（或 `https://…` 地址） |
@@ -139,7 +141,7 @@ pnpm list dsh-unified-context            # 确认已装进 profile
 | `/import-claude-code [选项]` | 导入 claude-code 会话 |
 | `/import-workbuddy [选项]` | 导入 WorkBuddy 会话 |
 | `/import-agents` | 把 pi/opencode 的 agent 与模式提示词导入为 skills |
-| `/link-context [--project DIR] [--dry-run] [--push]` | 用符号链接让各 Harness 共享同一份 `AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md` 与 skill hub（不复制） |
+| `/link-context [--project DIR] [--dry-run] [--push] [--memory=authority\|merge\|off] [--authority=harness]` | 用符号链接让各 Harness 共享同一份 `AGENTS.md`/`CLAUDE.md`/`CODEBUDDY.md`、skill hub 与长期记忆（不复制） |
 | `/import-automations [--only id] [--activate] [--dry-run]` | 把 Codex / WorkBuddy 自动化迁移为 dsh 定时任务（默认暂停） |
 | `/import-all [选项]` | 以上全部（5 个会话来源 + agents + 上下文链接 + 暂停的自动化） |
 | `/attach-workspaces` | 把已导入会话挂到 cwd 匹配的工作区（补挂旧导入） |
@@ -157,6 +159,8 @@ node import.mjs agents --apply         # 只导入 agents/提示词 → skills
 node import.mjs context --apply        # 共享 AGENTS.md/CLAUDE.md/CODEBUDDY.md + skills
 node import.mjs context --push --apply # 同时把 hub 技能反向链接到各 Harness 根
 node import.mjs context --project-dir ~/work/app --apply # 项目级上下文统一
+node import.mjs context --memory=merge --apply           # 生成合并记忆索引（引用，不复制）
+node import.mjs context --authority=workbuddy --apply    # 指定以哪个 Harness 的记忆为准
 node import.mjs automations            # Codex/WorkBuddy 自动化迁移计划（默认暂停）
 node export.mjs                        # 把会话导出为 Markdown，供任意 agent 阅读
 ```
@@ -252,6 +256,25 @@ flowchart LR
 
 在 GUI 里用 `/link-context`（`--dry-run` 只预览），或在 CLI 用 `node import.mjs context [--apply] [--push] [--project-dir DIR]`。
 
+### 长期记忆
+
+记忆是独立的上下文层，分两个范围：
+
+| 范围 | 原生来源 | 统一存放位置 |
+| --- | --- | --- |
+| 项目 | Claude Code `~/.claude/projects/<编码>/memory/`；WorkBuddy `<项目>/.workbuddy/memory/` | `<项目>/.agents/memory/` |
+| Agent | Codex `~/.codex/agent-memory/<agent>/`；Claude Code `~/.claude/agent-memory/<agent>/`（按 Agent，参照 Codex 布局） | `~/.agents/agent-memory/<agent>/` |
+
+`--memory` 策略：
+
+- **`authority`（默认）**——选一个真目录为准（项目：Claude → WorkBuddy；Agent：Codex → Claude，可用 `--authority=<harness>` 覆盖），其他 Harness 的路径变软链接；内容不同且非空的记忆报告为冲突、保持原样，不自动合并。
+- **`merge`**——`<项目>/.agents/memory/MEMORY.md` 变成生成的索引，**原地引用**各 Harness 的记忆笔记（绝对路径，不复制），不替换任何目录。Agent 记忆仍走 authority。
+- **`off`**——不动记忆。
+
+dsh 没有独立记忆读取器，所以在项目 `AGENTS.md`（所有 Harness 共享的那份）里生成一小段带标记的索引（`<!-- dsh-unified-context:memory:begin -->`）指向 `.agents/memory/`，笔记按需读取，不往每次 prompt 里塞。标记块之外的内容绝不修改。
+
+Codex 的 `agent-memory` 是**按 Agent 而不是按项目**的，所以它统一到 `~/.agents/agent-memory/<agent>/`，不并入项目记忆。整个记忆层幂等、可 `--memory=off` 关闭。
+
 ## 自动化任务
 
 定时任务也能迁移：
@@ -290,7 +313,7 @@ flowchart LR
 - `verify.mts` — 在 staging 目录上用**真实** dsh JSONL 后端 + skill provider 读回导入产物（在 dsh 仓库根执行 `node --import tsx/esm ../dsh-unified-context/verify.mts <sessions根> <skills根>`）→ 期望输出 `SESSIONS ALL PASS / SKILLS ALL PASS`。
 - `plugin/plugin-test.mts` — 端到端：在真实 cordis 上下文加载插件，跑命令与新会话迁移询问，断言幂等与状态持久化。
 - `scripts/e2e-commands.mjs` — 新命令的端到端手测：在真实 cordis 命令运行时挂载插件，调用 `/link-context`（隔离 HOME 里真实应用 + 真 HOME dry-run）与 `/import-automations`（内存 schedule：创建为暂停，重跑 created 0 / skipped 11）。
-- `tests/` — Vitest：同步按钮（`sync-button.spec.tsx`、`sync-button-hide.spec.tsx`）、reader（`opencode-reader.spec.ts`、`workbuddy-reader.spec.ts`）、上下文链接器（`context.spec.ts`）、自动化（`automations.spec.ts`、`workbuddy-automations.spec.ts`）、真实工具结果转换（`convert-tool-result.spec.ts`）与 `attach-workspaces.spec.ts`。
+- `tests/` — Vitest：同步按钮（`sync-button.spec.tsx`、`sync-button-hide.spec.tsx`）、reader（`opencode-reader.spec.ts`、`workbuddy-reader.spec.ts`）、上下文链接器（`context.spec.ts`）、记忆层（`memory.spec.ts`）、自动化（`automations.spec.ts`、`workbuddy-automations.spec.ts`）、真实工具结果转换（`convert-tool-result.spec.ts`）与 `attach-workspaces.spec.ts`。
 - CI（GitHub Actions，`macos-latest`，Node 22）：`pnpm install` → `pnpm run build` → `npx vitest run`。
 
 ```sh

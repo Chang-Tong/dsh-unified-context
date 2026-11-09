@@ -96,7 +96,8 @@ try {
   const dry = await runCommand(ctx, 'link-context', '--dry-run', '/Volumes/外置大脑/Mac迁移/project/05-pr/dsh/dsh-unified-context')
   const interesting = dry.split('\n').filter(line =>
     line.startsWith('[instructions') || line.startsWith('[skills]') || line.startsWith('[conflicts]')
-    || line.startsWith('[context]') || line.includes('not a dsh-compatible') || line.includes('flat skill'))
+    || line.startsWith('[context]') || line.startsWith('[memory') || line.startsWith('[agent memory')
+    || line.startsWith('[project memory') || line.includes('not a dsh-compatible') || line.includes('flat skill'))
   console.log(interesting.slice(0, 30).join('\n'))
   if (!dry.includes('[context] plan:')) throw new Error('dry run did not produce a plan')
 

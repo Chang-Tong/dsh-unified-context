@@ -28,6 +28,7 @@ import { defaultCodexRoot, listCodexConversations } from './lib/codex-reader.mjs
 import { defaultClaudeRoot, listClaudeSessions, parseClaudeSession } from './lib/claude-reader.mjs'
 import { applySkillPlan, collectAgents, fileSize, planSkillWrites } from './lib/agents.mjs'
 import { applyContextPlan, planContext, renderContextPlan, resolveContextLayout } from './lib/context.mjs'
+import { applyMemoryPlan, planMemory, renderMemoryPlan, resolveMemoryLayout } from './lib/memory.mjs'
 import { planAutomations, renderAutomationPlan } from './lib/automations-plan.mjs'
 import { defaultWorkbuddyRoot, listWorkbuddySessions, parseWorkbuddySession } from './lib/workbuddy-reader.mjs'
 import { defaultWorkbuddyAutomationsDb } from './lib/workbuddy-automations.mjs'
@@ -67,6 +68,8 @@ options:
   --codex-home <dir>     Codex 配置根目录（默认 ~/.codex；automations 从 <dir>/automations 读取）
   --project-dir <dir>    context 命令的项目目录（默认当前目录）
   --push                 context 同时把 hub 技能反向链接到各 Harness 技能根（默认只汇入 hub，不反向推送）
+  --memory <mode>        project/agent 长期记忆策略：authority（默认）|merge（生成索引）|off
+  --authority <harness>  authority 模式下以哪个 Harness 的记忆为准（claude-code|workbuddy|codex|dsh）
   --timezone <zone>      automations 的时区（默认 Asia/Shanghai）
   --only <ids>           automations 只处理逗号分隔的自动化 id
 `
@@ -333,13 +336,21 @@ function runContext(options) {
   const layout = resolveContextLayout({ projectDir: options.projectDir, pushSkills: options.pushSkills === true })
   const plan = planContext(layout)
   for (const line of renderContextPlan(plan)) log(line)
+
+  const memoryLayout = resolveMemoryLayout({ projectDir: options.projectDir })
+  const memoryPlan = planMemory(memoryLayout, { mode: options.memoryMode ?? 'authority', authority: options.memoryAuthority })
+  for (const line of renderMemoryPlan(memoryPlan)) log(line)
+
   if (!options.apply) {
-    log('[context] dry-run：未写入任何东西（加 --apply 创建链接）')
+    log('[context] dry-run：未写入任何东西（加 --apply 创建链接 / 写入记忆索引）')
     return
   }
   const result = applyContextPlan(plan)
   log(`[context] 结果: 应用 ${result.applied.length}/${plan.actions.length} 项，失败 ${result.failed.length}，冲突 ${plan.conflicts.length}`)
   for (const failure of result.failed) log(`  [失败] ${failure.path}: ${failure.error}`)
+  const memoryResult = applyMemoryPlan(memoryPlan)
+  log(`[memory] 结果: 应用 ${memoryResult.applied.length}/${memoryPlan.actions.length} 项，失败 ${memoryResult.failed.length}，冲突 ${memoryPlan.conflicts.length}`)
+  for (const failure of memoryResult.failed) log(`  [失败] ${failure.path}: ${failure.error}`)
 }
 
 /** Automations: print the migration plan (creating tasks needs the running dsh host). */
@@ -395,6 +406,8 @@ async function main() {
     workbuddyAutomationsDb: flags['workbuddy-automations-db'] ?? defaultWorkbuddyAutomationsDb(),
     projectDir: flags['project-dir'],
     pushSkills: flags.push === true,
+    memoryMode: flags.memory ?? 'authority',
+    memoryAuthority: flags.authority,
     timeZone: flags.timezone ?? 'Asia/Shanghai',
     only: flags.only,
   }

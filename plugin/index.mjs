@@ -23,6 +23,7 @@ import { maybeOfferMigration } from './migrate-on-start.mjs'
 import { attachSessionsToWorkspaces, listImportedSessions } from './attach-workspaces.mjs'
 import { importAutomations } from './automations-import.mjs'
 import { applyContextPlan, planContext, renderContextPlan, resolveContextLayout } from '../lib/context.mjs'
+import { applyMemoryPlan, planMemory, renderMemoryPlan, resolveMemoryLayout } from '../lib/memory.mjs'
 import { defaultWorkbuddyAutomationsDb } from '../lib/workbuddy-automations.mjs'
 import { defaultWorkbuddyRoot } from '../lib/workbuddy-reader.mjs'
 
@@ -89,6 +90,7 @@ function defaultOptions() {
     skillsRoot: joinAgentsSkills(),
     toolTruncate: 1000,
     timeZone: 'Asia/Shanghai',
+    memoryMode: 'authority',
   }
 }
 
@@ -208,12 +210,16 @@ export function apply(ctx, config = {}) {
   ctx.commands.register({
     name: 'link-context',
     description: 'Share ONE context (AGENTS.md/CODEBUDDY.md, skills) across dsh/codex/claude/pi/opencode/WorkBuddy with symlinks — never copies',
-    input: { hint: '[--project DIR] [--dry-run]' },
+    input: { hint: '[--project DIR] [--dry-run] [--push] [--memory=authority|merge|off] [--authority=<harness>]' },
     handler: async (invocation) => {
       const flags = parseFlags(invocation.rawInput)
       const projectDir = typeof flags.project === 'string' ? flags.project : await sessionCwd(ctx, invocation.agent)
       const plan = planContext(resolveContextLayout({ projectDir, pushSkills: flags.push === true }))
-      const lines = renderContextPlan(plan)
+      const memoryPlan = planMemory(resolveMemoryLayout({ projectDir }), {
+        mode: typeof flags.memory === 'string' ? flags.memory : defaults.memoryMode,
+        authority: typeof flags.authority === 'string' ? flags.authority : undefined,
+      })
+      const lines = [...renderContextPlan(plan), ...renderMemoryPlan(memoryPlan)]
       if (flags['dry-run'] === true) {
         lines.push('[context] dry run: nothing was written')
         return { kind: 'success', text: lines.join('\n') }
@@ -221,6 +227,9 @@ export function apply(ctx, config = {}) {
       const result = applyContextPlan(plan)
       lines.push(`[context] applied ${result.applied.length} of ${plan.actions.length} change(s); ${result.failed.length} failed`)
       for (const failure of result.failed) lines.push(`  [failed] ${failure.path}: ${failure.error}`)
+      const memoryResult = applyMemoryPlan(memoryPlan)
+      lines.push(`[memory] applied ${memoryResult.applied.length} of ${memoryPlan.actions.length} change(s); ${memoryResult.failed.length} failed`)
+      for (const failure of memoryResult.failed) lines.push(`  [failed] ${failure.path}: ${failure.error}`)
       return { kind: 'success', text: lines.join('\n') }
     },
   })
@@ -258,7 +267,7 @@ export function apply(ctx, config = {}) {
   ctx.commands.register({
     name: 'import-all',
     description: 'Full migration: sessions from all five harnesses + agents/skills + shared context links + automations (imported paused)',
-    input: { hint: '[--limit N] [--project 子串] [--since ISO|ms] [--no-tools] [--tool-truncate N] [--context-project DIR] [--activate]' },
+    input: { hint: '[--limit N] [--project 子串] [--since ISO|ms] [--no-tools] [--tool-truncate N] [--context-project DIR] [--memory=authority|merge|off] [--authority=<harness>] [--activate]' },
     handler: async (invocation) => {
       const input = parseInput(invocation.rawInput)
       const flags = parseFlags(invocation.rawInput)
@@ -273,6 +282,13 @@ export function apply(ctx, config = {}) {
       const contextResult = applyContextPlan(contextPlan)
       lines.push(`[context] linked ${contextResult.applied.length} item(s), ${contextPlan.conflicts.length} conflict(s), ${contextResult.failed.length} failed`)
       for (const conflict of contextPlan.conflicts.slice(0, 8)) lines.push(`  [conflict] ${conflict.path}: ${conflict.reason}`)
+      const memoryPlan = planMemory(resolveMemoryLayout({ projectDir }), {
+        mode: typeof flags.memory === 'string' ? flags.memory : defaults.memoryMode,
+        authority: typeof flags.authority === 'string' ? flags.authority : undefined,
+      })
+      const memoryResult = applyMemoryPlan(memoryPlan)
+      lines.push(`[memory] project/agent memory: ${memoryResult.applied.length} item(s), ${memoryPlan.conflicts.length} conflict(s), ${memoryResult.failed.length} failed`)
+      for (const conflict of memoryPlan.conflicts.slice(0, 8)) lines.push(`  [memory conflict] ${conflict.path}: ${conflict.reason}`)
       const automations = await importAutomations(ctx, automationOptions(defaults, flags), invocation.agent.session.id)
       lines.push(...automations.lines)
       return { kind: 'success', text: lines.join('\n') }
